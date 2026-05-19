@@ -1,0 +1,62 @@
+---
+title: "LangChain + Cartesia"
+description: "Use Cartesia TTS as a tool in LangChain agents."
+icon: "link"
+last_verified: "2026-05-19"
+contributor: "Example Contributor"
+contributor_url: "https://example.com"
+contributor_email: "contributor@example.com"
+---
+
+## Overview
+
+This integration lets LangChain agents generate speech using Cartesia's TTS API. Use it when your agent needs to produce audio output as part of a conversational or agentic workflow.
+
+## Prerequisites
+
+- A Cartesia API key ([get one here](https://play.cartesia.ai))
+- Python 3.9+
+- LangChain installed
+
+## Installation
+
+```bash
+pip install langchain cartesia
+```
+
+## Quick start
+
+```python
+from cartesia import Cartesia
+from langchain.tools import tool
+
+client = Cartesia(api_key="your-api-key")
+
+@tool
+def speak(text: str) -> str:
+    """Generate speech audio from text using Cartesia TTS."""
+    audio = client.tts.bytes(
+        model_id="sonic-2024-10-25",
+        transcript=text,
+        voice_id="a0e99841-438c-4a64-b679-ae501e7d6091",
+        output_format={
+            "container": "wav",
+            "encoding": "pcm_f32le",
+            "sample_rate": 44100,
+        },
+    )
+    with open("output.wav", "wb") as f:
+        f.write(audio)
+    return "Audio saved to output.wav"
+
+# Use the tool in a LangChain agent
+result = speak.invoke("Welcome to Cartesia.")
+print(result)
+# Output: Audio saved to output.wav
+```
+
+## Resources
+
+- [LangChain tools documentation](https://python.langchain.com/docs/how_to/custom_tools/)
+- [Cartesia TTS API reference](https://docs.cartesia.ai/api-reference/tts/bytes)
+- [Cartesia Python SDK](https://github.com/cartesia-ai/cartesia-python)
