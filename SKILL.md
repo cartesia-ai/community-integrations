@@ -13,9 +13,13 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 
 - [ ] **[REQUIRED]** File is in `submissions/` directory with kebab-case name (e.g., `langchain-cartesia.mdx`)
 - [ ] **[REQUIRED]** All required frontmatter fields present: `title`, `description`, `last_verified`, `contributor`, `contributor_email`
+- [ ] **[REQUIRED]** Metadata frontmatter fields present: `category`, `developer`, `developer_website`, `developer_docs`
+- [ ] **[REQUIRED]** `category` is one of: `framework`, `platform`, `infrastructure`, `observability`, `other`
 - [ ] **[REQUIRED]** `last_verified` date is within the last 30 days
 - [ ] **[REQUIRED]** All template sections present (Overview, Prerequisites, Installation, Quick start, Resources)
-- [ ] **[RECOMMENDED]** Optional sections (Configuration, Troubleshooting) included only if they add value — deleted if empty
+- [ ] **[REQUIRED]** No images or screenshots — if a visual walkthrough is needed, link to external docs
+- [ ] **[RECOMMENDED]** Optional sections (Configuration) included only if they add value — deleted if empty
+- [ ] **[RECOMMENDED]** If multiple languages are shown, Mintlify `<Tabs>` component is used
 
 ## Code quality
 
@@ -40,6 +44,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - [ ] **[REQUIRED]** Cartesia SDK methods referenced exist in the current SDK version
 - [ ] **[REQUIRED]** Prerequisites list is complete — nothing missing that would prevent the example from running
 - [ ] **[REQUIRED]** Links in Resources section are valid and point to correct destinations
+- [ ] **[REQUIRED]** Frontmatter URLs (`contributor_url`, `developer_website`, `developer_docs`) are valid
 
 ## Scope
 

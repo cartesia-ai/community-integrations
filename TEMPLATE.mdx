@@ -1,26 +1,35 @@
 ---
 title: "Your Integration Name + Cartesia"
 description: "One sentence: what this integration enables."
-icon: "puzzle-piece"
 last_verified: "YYYY-MM-DD"
-contributor: "Your Name"
-contributor_url: "https://your-site.com"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Your Name or Company"
 contributor_email: "you@example.com"
+contributor_url: "https://your-site.com"
+
+# Integration metadata (useful for internal tracking and directory rendering)
+category: "framework"  # framework | platform | infrastructure | observability | other
+developer: "Your Company Name"
+developer_website: "https://your-site.com"
+developer_docs: "https://your-site.com/docs"
 ---
 
 {/* 
-  INSTRUCTIONS (delete this block before submitting):
+  INSTRUCTIONS (delete this entire comment block before submitting):
   
   1. Copy this file to submissions/your-integration-name.mdx
   2. Fill in every section below
   3. Delete all instructional comments
-  4. Self-review against SKILL.md
-  5. Open a PR
+  4. No images — if your integration needs a visual walkthrough, link to your own docs
+  5. Code examples can use Mintlify <Tabs> for multiple languages (see below)
+  6. Self-review against SKILL.md
+  7. Open a PR
 */}
 
 ## Overview
 
-One or two sentences: what your integration does and why a developer would use it with Cartesia. No marketing — just state what it enables.
+One or two sentences: what your integration does and why a developer would use it with Cartesia. State what it enables — don't pitch.
 
 ## Prerequisites
 
@@ -33,18 +42,34 @@ What the developer needs before starting:
 ## Installation
 
 ```bash
-# Install any packages needed for this integration
 pip install your-package cartesia
 ```
 
 ## Quick start
 
-A single, complete, copy-paste-and-run example showing the core use case. This is the most important section — spend your time here.
+A single, complete, copy-paste-and-run example showing the core use case. This is the most important section.
+
+{/* 
+  If your integration supports multiple languages, use Mintlify tabs:
+  
+  <Tabs>
+    <Tab title="Python">
+    ```python
+    # your Python example
+    ```
+    </Tab>
+    <Tab title="JavaScript">
+    ```javascript
+    // your JavaScript example
+    ```
+    </Tab>
+  </Tabs>
+
+  If you only support one language, just use a single code block (no tabs needed).
+*/}
 
 ```python
-# Complete, runnable example with imports
 from cartesia import Cartesia
-# import your_package
 
 client = Cartesia(api_key="your-api-key")
 
@@ -61,14 +86,10 @@ If your integration has configuration options relevant to the Cartesia usage, do
 |-----------|------|---------|-------------|
 | `param_name` | `string` | `"default"` | What it controls |
 
-If there's nothing to configure beyond the quick start, delete this section.
-
-## Troubleshooting
-
-Common issues and their fixes. Keep to 2-3 items max. If there's nothing non-obvious, delete this section.
+{/* Delete this section if there's nothing to configure beyond the quick start. */}
 
 ## Resources
 
 - [Your integration docs](https://link)
 - [Cartesia API reference](https://docs.cartesia.ai/api-reference)
-- [Your support/community channel](https://link)
+- [Your support / community channel](https://link)
