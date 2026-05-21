@@ -20,7 +20,7 @@ Cut these phrases — they add nothing:
 - "in order to" → "to"
 - "it's important to note that" → (delete, just state the thing)
 - "as mentioned above" → (delete, or link to the section)
-- "simply" / "just" / "easily" → (delete — if it were simple, you wouldn't need to say so)
+- "simply" / "just" / "easily" → (delete — let's not assume what readers find simple or hard)
 
 ## No marketing
 
@@ -38,7 +38,7 @@ Every code example must be **complete and runnable**:
 
 - Include all imports
 - Use realistic variable names (`voice_id`, `audio_chunk`, not `x`, `data`)
-- Add comments only for non-obvious lines — trust the code to explain itself
+- Comment any line where the *why* isn't obvious — especially patterns that are standard practice for your tool but unfamiliar to someone who hasn't used it before. Skip comments that just restate what the code does (e.g., `# create a client`)
 - Show expected output when it helps understanding
 
 ```python
@@ -61,9 +61,11 @@ res = c.tts.bytes(model_id="sonic-2024-10-25", transcript="test", voice_id="abc"
 
 ## Structure
 
-Open with what the page enables (one sentence). Show the smallest working example immediately. Build complexity only after the basics are clear.
+Open with what the integration enables (one sentence). Show the smallest working example of the integration with Cartesia. Keep the focus on the integration — don't explain your product's fundamentals. If there's more to cover, link to your own docs.
 
-Don't write multi-paragraph introductions before showing code. Developers came to see how it works — show them.
+Don't write multi-paragraph introductions before showing code. Show the Developer how it works sooner rather than later.
+
+If you need to provide background on your product, link to your own docs rather than explaining it here. Use HTML for external links so they open in a new tab: `<a href="https://..." target="_blank">link text</a>`
 
 ## Formatting
 
@@ -74,4 +76,4 @@ Don't write multi-paragraph introductions before showing code. Developers came t
 
 ## Length
 
-One page. If you can't explain your integration with Cartesia in one page, narrow the scope to the core use case and link to your own docs for the rest.
+Aim to keep it short — a developer should be able to read the whole page in under 5 minutes. If it's running long, narrow the scope to the core use case and link to your own docs for the rest.
