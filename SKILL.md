@@ -15,6 +15,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - [ ] **[REQUIRED]** All required frontmatter fields present: `title`, `description`, `last_verified`, `contributor`, `contributor_email`
 - [ ] **[REQUIRED]** Metadata frontmatter fields present: `category`, `developer`, `developer_website`, `developer_docs`
 - [ ] **[REQUIRED]** `category` is one of: `framework`, `platform`, `infrastructure`, `observability`, `other`
+- [ ] **[REQUIRED]** `cartesia_product` is a list containing only valid values: `tts`, `stt`, `line`
 - [ ] **[REQUIRED]** `last_verified` date is within the last 30 days
 - [ ] **[REQUIRED]** All template sections present (Overview, Prerequisites, Installation, Quick start, Resources)
 - [ ] **[REQUIRED]** No images or screenshots — if a visual walkthrough is needed, link to external docs

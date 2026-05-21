@@ -23,6 +23,7 @@ This is **not** the place to re-document Cartesia's API, pitch your product, or 
 - One MDX file per integration, following `TEMPLATE.mdx` exactly
 - All code examples must be complete and runnable (include imports)
 - No marketing language — let the code speak
+- Tag which Cartesia product(s) your integration supports via `cartesia_product` in frontmatter (valid values: `tts`, `stt`, `line`)
 - No images or screenshots — if your integration needs a visual walkthrough, link to your own docs for that
 - Multiple languages are welcome using Mintlify `<Tabs>` but not required
 - Read the [Style Guide](STYLE_GUIDE.md) before writing
