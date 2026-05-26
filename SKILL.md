@@ -28,6 +28,8 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - **[REQUIRED]** Quick start example is complete and runnable (includes all imports)
 - **[REQUIRED]** Code uses descriptive variable names (`voice_id`, `audio_chunk`, not `x`, `data`)
 - **[REQUIRED]** Cartesia SDK usage is correct (valid method names, parameter names, model IDs)
+- **[REQUIRED]** Setup snippets (HTML containers, config files) appear before code that references them
+- **[REQUIRED]** Runtime assumptions are noted (e.g., top-level `await` requires ES modules or an async wrapper)
 - **[RECOMMENDED]** Comments are used only for non-obvious lines
 - **[RECOMMENDED]** Expected output shown where it aids understanding
 
@@ -38,6 +40,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - **[REQUIRED]** Does not re-document Cartesia's API — focuses on the *integration* use case
 - **[REQUIRED]** Active voice, present tense throughout
 - **[REQUIRED]** No filler phrases ("in order to", "it's important to note", "as mentioned above")
+- **[REQUIRED]** Key product terms (Cartesia and third-party) are linked to authoritative developer docs (not marketing homepages) on first mention
 - **[RECOMMENDED]** Page fits on a single screen when rendered (aim for concise)
 
 ## Accuracy
@@ -50,6 +53,8 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 - **[REQUIRED]** Prerequisites are specific — include version constraints (e.g., "Python 3.10+"), required env vars (e.g., `CARTESIA_API_KEY`), account setup with signup URLs, and any API keys needed from third-party services with links to where to get them
 - **[REQUIRED]** Links in Resources section are valid and point to correct destinations
 - **[REQUIRED]** External links use HTML with target="_blank"
+- **[REQUIRED]** Resource links use canonical URLs (no unnecessary file suffixes like `.md`)
+- **[REQUIRED]** Page includes a visible "Last verified" date and contributor attribution
 - **[REQUIRED]** Frontmatter URLs (`contributor_url`, `developer_website`, `developer_docs`) are valid
 
 ## Scope

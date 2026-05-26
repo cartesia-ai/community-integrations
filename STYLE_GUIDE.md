@@ -40,6 +40,8 @@ Every code example must be **complete and runnable**:
 - Use realistic variable names (`voice_id`, `audio_chunk`, not `x`, `data`)
 - Comment any line where the *why* isn't obvious — especially patterns that are standard practice for your tool but unfamiliar to someone who hasn't used it before. Skip comments that just restate what the code does (e.g., `# create a client`)
 - Show expected output when it helps understanding
+- If a code sample depends on an HTML element or setup snippet, show that snippet first
+- If a snippet uses top-level `await` or other runtime-specific syntax, add a one-line note about the requirement (e.g., ES module, async wrapper)
 
 ```python
 # Good
@@ -66,6 +68,12 @@ Open with what the integration enables (one sentence). Show the smallest working
 Don't write multi-paragraph introductions before showing code. Show the Developer how it works sooner rather than later.
 
 If you need to provide background on your product, link to your own docs rather than explaining it here. Use HTML for external links so they open in a new tab: `<a href="https://..." target="_blank">link text</a>`
+
+## Linking
+
+**Link key terms on first mention.** When you reference a Cartesia product or feature (e.g., "Cartesia Line agent", "Sonic TTS", "Ink STT"), link to its page on docs.cartesia.ai the first time it appears. Same for your own product terms — link to your developer docs, not your marketing homepage. Don't repeat the link after the first mention.
+
+**Use canonical URLs.** Prefer clean docs URLs without file suffixes (e.g., `https://docs.example.com/guide` not `https://docs.example.com/guide.md`) when both resolve to the same page.
 
 ## Formatting
 
