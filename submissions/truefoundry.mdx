@@ -1,0 +1,125 @@
+---
+title: "TrueFoundry"
+description: "Route Cartesia TTS and STT through TrueFoundry's AI Gateway."
+last_verified: "2026-06-03"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "TrueFoundry"
+contributor_email: "support@truefoundry.com"
+contributor_url: "https://www.truefoundry.com"
+
+# Integration metadata
+cartesia_product: [tts, stt]
+developer: "TrueFoundry"
+developer_website: "https://www.truefoundry.com"
+developer_docs: "https://www.truefoundry.com/docs/ai-gateway/cartesia"
+---
+
+<Note>Community integration by **TrueFoundry**. Last verified: 2026-06-03.</Note>
+
+## Overview
+
+[**TrueFoundry AI Gateway**](https://www.truefoundry.com/ai-gateway)is the proxy layer that sits between your applications and the LLM providers and MCP Servers. It is an enterprise-grade platform that enables users to access 1000+ LLMs using a unified interface while taking care of observability and governance.
+
+**Cartesia** is available as a first-party provider in TrueFoundry's AI Gateway for [**TTS and STT**](https://www.truefoundry.com/docs/ai-gateway/cartesia). Register Cartesia models in the gateway, then call them with the Cartesia Python SDK and your TrueFoundry API key.
+
+## Prerequisites
+
+You need a TrueFoundry workspace, a Cartesia API key for gateway configuration, and Python 3.10+.
+
+Complete dashboard setup in the TrueFoundry docs before running the examples below:
+
+<Card title="Cartesia — add and configure models in AI Gateway" icon="book" href="https://www.truefoundry.com/docs/ai-gateway/cartesia">
+  Add a Cartesia account, register models, and copy code snippets from the TrueFoundry dashboard.
+</Card>
+
+From that guide:
+
+- Go to **AI Gateway** → **Models** → **Cartesia**, then **Add Cartesia Account** (account name + Cartesia API key).
+- Click **+ Add Model** and set **Display name**, **Model ID**, and **Model type**. For Cartesia, **Model ID** and **Display name** must be identical.
+- Optionally add collaborators — see <a href="https://www.truefoundry.com/docs/ai-gateway/gateway-access-control" target="_blank">gateway access control</a>.
+
+You also need a TrueFoundry API key (`TFY_API_KEY`) and your **Gateway Base URL** from <a href="https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway" target="_blank">making requests via the gateway</a>.
+
+Install the Cartesia SDK and HTTP client:
+
+```bash
+pip install cartesia httpx
+```
+
+## Getting Started - TTS
+
+Point `AsyncCartesia` at your gateway TTS route. Replace `GATEWAY_BASE_URL`, `cartesiaProviderAccountName`, `TFY_API_KEY`, and `model_id` with values from your TrueFoundry workspace.
+
+```python
+import asyncio
+import httpx
+from cartesia import AsyncCartesia
+
+TFY_API_KEY = "your-tfy-api-key"
+BASE_URL = "{GATEWAY_BASE_URL}/tts/{cartesiaProviderAccountName}"
+OUTPUT_FILE = "/path/to/output.wav"
+
+client = AsyncCartesia(
+    api_key="dummy",  # gateway auth uses x-tfy-api-key, not Cartesia api_key
+    base_url=BASE_URL,
+    http_client=httpx.AsyncClient(
+        headers={"x-tfy-api-key": TFY_API_KEY},
+    ),
+)
+
+
+async def main():
+    response = await client.tts.generate(
+        model_id="sonic-3",  # must match a model ID registered in AI Gateway
+        transcript="Welcome to Cartesia Sonic!",
+        voice={"mode": "id", "id": "a0e99841-438c-4a64-b679-ae501e7d6091"},
+        language="en",
+        output_format={
+            "container": "wav",
+            "sample_rate": 44100,
+            "encoding": "pcm_s16le",
+        },
+    )
+    with open(OUTPUT_FILE, "wb") as f:
+        f.write(await response.read())
+    print(OUTPUT_FILE)
+
+
+asyncio.run(main())
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `GATEWAY_BASE_URL` | `string` | Gateway base URL from TrueFoundry (no trailing slash) |
+| `cartesiaProviderAccountName` | `string` | Cartesia provider account name under **AI Gateway** → **Models** → **Cartesia** |
+| `TFY_API_KEY` | `string` | TrueFoundry API key sent as the `x-tfy-api-key` header |
+| `model_id` | `string` | Cartesia model ID; must match **Model ID** and **Display name** in the gateway |
+
+## Getting Started - STT
+
+Register STT model types in the gateway, then call the gateway STT route for your provider account with the same SDK pattern (`base_url` uses `/stt/` instead of `/tts/`).
+
+Use **Code Snippet** and **Try in Playground** on each model in the TrueFoundry dashboard for ready-made TTS and STT examples:
+
+<CardGroup cols={2}>
+  <Card title="TrueFoundry Cartesia setup" icon="book" href="https://www.truefoundry.com/docs/ai-gateway/cartesia">
+    Dashboard walkthrough, model configuration, and inference examples.
+  </Card>
+
+  <Card title="Gateway access control" icon="book" href="https://www.truefoundry.com/docs/ai-gateway/gateway-access-control">
+    Share Cartesia provider accounts with collaborators and teams.
+  </Card>
+</CardGroup>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Making requests via the gateway" icon="book" href="https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway">
+    Gateway base URL and TrueFoundry API keys.
+  </Card>
+
+  <Card title="Cartesia TTS API reference" icon="book" href="https://docs.cartesia.ai/api-reference/tts/tts">
+    Cartesia TTS HTTP API reference.
+  </Card>
+</CardGroup>
