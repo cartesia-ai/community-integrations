@@ -1,0 +1,190 @@
+---
+title: "Tavily + Cartesia Line"
+description: "Give a Cartesia Line voice agent live web search and page extraction via the Tavily API."
+last_verified: "2026-06-03"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Tavily"
+contributor_email: "leopold.wohlgemuth@tavily.com"
+contributor_url: "https://tavily.com"
+
+# Integration metadata
+cartesia_product: [line]
+developer: "Tavily"
+developer_website: "https://tavily.com"
+developer_docs: "https://docs.tavily.com"
+---
+
+<Note>Community integration by **Tavily**. Last verified: 2026-06-03.</Note>
+
+## Overview
+
+Wire <a href="https://docs.tavily.com" target="_blank">Tavily</a> search and page extraction into a <a href="https://docs.cartesia.ai/line/sdk/agents" target="_blank">Cartesia Line agent</a> as loopback tools, so the agent can answer questions about current events, fresh facts, and specific URLs during a voice call. The agent decides when to search and when to read a page; Tavily returns voice-friendly snippets tuned for low latency.
+
+## Prerequisites
+
+- Python 3.10+
+- A Cartesia API key (`CARTESIA_API_KEY`) from <a href="https://play.cartesia.ai/keys" target="_blank">Cartesia keys</a>
+- A Tavily API key (`TAVILY_API_KEY`) from the <a href="https://app.tavily.com/home" target="_blank">Tavily dashboard</a>
+- An LLM provider key — `OPENAI_API_KEY` for the example below
+- The Cartesia CLI for local chat testing (<a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">Line quickstart</a>)
+
+## Installation
+
+```bash
+pip install cartesia-line tavily-python
+```
+
+Set the three keys in your environment before running the agent:
+
+```bash
+export CARTESIA_API_KEY="..."
+export TAVILY_API_KEY="..."
+export OPENAI_API_KEY="..."
+```
+
+## Quick start
+
+Define two <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">loopback tools</a> backed by `AsyncTavilyClient` — one for search, one for full-page extraction — and pass them to an `LlmAgent`. Run the file, then connect with `cartesia chat 8000`.
+
+```python
+"""Voice research agent: Cartesia Line + Tavily."""
+
+from datetime import datetime
+import os
+from typing import Annotated, Optional
+
+from tavily import AsyncTavilyClient
+
+from line.llm_agent import LlmAgent, LlmConfig, ToolEnv, end_call, loopback_tool
+from line.voice_agent_app import AgentEnv, CallRequest, VoiceAgentApp
+
+SYSTEM_PROMPT = """Today is {today}. You are a research assistant on a live voice call.
+
+You have two web tools:
+
+1. web_search — Find relevant pages. Use for current events, prices, news, or anything
+   that needs fresh data. Start here.
+2. web_extract — Pull full content from a specific URL. Use only when a search snippet
+   is too thin, or the user names a link they want read.
+
+Lead with the answer. Two or three sentences unless the user asks for more. Name your
+source when it matters. If results conflict or look stale, say so. Use end_call when
+the user wraps up.
+
+This is a voice call. Plain sentences only — no markdown, no lists, no special characters."""
+
+INTRODUCTION = (
+    "Hey! I'm your research assistant, powered by Tavily and Cartesia. "
+    "Ask me anything and I'll dig it up live."
+)
+
+EXTRACT_MAX_CHARS = 3000
+
+
+class TavilyTools:
+    # One client per agent so the httpx connection pool is reused across tool calls.
+    def __init__(self, api_key: str):
+        self._client = AsyncTavilyClient(api_key=api_key, client_source="cartesia-line-agent")
+
+    @loopback_tool
+    async def web_search(
+        self,
+        ctx: ToolEnv,
+        query: Annotated[str, "The search query. Be specific."],
+        time_range: Annotated[
+            Optional[str],
+            "Optional recency filter: 'day', 'week', 'month', or 'year'.",
+        ] = None,
+    ) -> str:
+        """Search the web for current information."""
+        # 'fast' depth keeps latency in the budget for a voice turn.
+        kwargs: dict = {"query": query, "search_depth": "fast", "max_results": 5}
+        if time_range is not None:
+            kwargs["time_range"] = time_range
+        response = await self._client.search(**kwargs)
+
+        results = response.get("results", [])
+        if not results:
+            return "No relevant information found."
+
+        parts = [f"Search results for: '{query}'\n"]
+        for i, r in enumerate(results, start=1):
+            parts.append(f"\n--- Source {i}: {r['title']} (score {r.get('score', 0):.2f}) ---\n")
+            if r.get("content"):
+                parts.append(f"{r['content']}\n")
+            parts.append(f"URL: {r['url']}\n")
+        return "".join(parts)
+
+    @loopback_tool
+    async def web_extract(
+        self,
+        ctx: ToolEnv,
+        url: Annotated[str, "The URL to extract content from."],
+    ) -> str:
+        """Extract the full content of a webpage given its URL."""
+        response = await self._client.extract(urls=[url])
+
+        results = response.get("results", [])
+        if not results:
+            failed = response.get("failed_results", [])
+            if failed:
+                return f"Extraction failed for {url}: {failed[0].get('error', 'unknown error')}"
+            return "No content could be extracted from that URL."
+
+        raw = results[0].get("raw_content", "")
+        if not raw:
+            return "The page was reached but no readable content was found."
+        if len(raw) > EXTRACT_MAX_CHARS:
+            raw = raw[:EXTRACT_MAX_CHARS] + "\n\n[Content truncated]"
+        return f"Extracted content from {url}:\n\n{raw}"
+
+
+async def get_agent(env: AgentEnv, call_request: CallRequest):
+    tavily = TavilyTools(api_key=os.environ["TAVILY_API_KEY"])
+    return LlmAgent(
+        model="openai/gpt-4o-mini",
+        api_key=os.environ["OPENAI_API_KEY"],
+        tools=[tavily.web_search, tavily.web_extract, end_call],
+        config=LlmConfig(
+            system_prompt=SYSTEM_PROMPT.format(today=datetime.now().strftime("%Y-%m-%d")),
+            introduction=INTRODUCTION,
+            max_tokens=600,
+            temperature=0.7,
+        ),
+    )
+
+
+app = VoiceAgentApp(get_agent=get_agent)
+
+if __name__ == "__main__":
+    app.run()
+```
+
+Run it:
+
+```bash
+python main.py
+# in another terminal:
+cartesia chat 8000
+```
+
+## Configuration
+
+Both tools accept the standard Tavily parameters — these are the ones worth tuning for a voice agent:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `search_depth` | `string` | `"fast"` | `"fast"` for voice latency; `"advanced"` for deeper retrieval at higher latency. |
+| `max_results` | `int` | `5` | Number of search results returned to the LLM. |
+| `time_range` | `string` | `None` | Recency filter — `"day"`, `"week"`, `"month"`, `"year"`. |
+| `EXTRACT_MAX_CHARS` | `int` | `3000` | Local cap on extracted page content to keep the LLM context tight. |
+
+See the <a href="https://docs.tavily.com/documentation/api-reference/endpoint/search" target="_blank">Tavily Search API reference</a> for the full parameter set, including `topic`, `include_domains`, and `country`.
+
+## Resources
+
+- <a href="https://github.com/cartesia-ai/line/tree/main/example_integrations/tavily" target="_blank">Runnable example in the Cartesia Line repo</a>
+- <a href="https://docs.tavily.com" target="_blank">Tavily documentation</a>
+- <a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">Cartesia Line quickstart</a>
+- <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">Cartesia Line tools reference</a>
