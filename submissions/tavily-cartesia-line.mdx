@@ -19,7 +19,7 @@ developer_docs: "https://docs.tavily.com"
 
 ## Overview
 
-Wire <a href="https://docs.tavily.com" target="_blank">Tavily</a> search and page extraction into a <a href="https://docs.cartesia.ai/line/sdk/agents" target="_blank">Cartesia Line agent</a> as loopback tools, so the agent can answer questions about current events, fresh facts, and specific URLs during a voice call. The agent decides when to search and when to read a page; Tavily returns voice-friendly snippets tuned for low latency.
+Add live web search and page extraction to a <a href="https://docs.cartesia.ai/line/sdk/agents" target="_blank">Cartesia Line</a> voice agent using <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">loopback tools</a> backed by <a href="https://docs.tavily.com" target="_blank">Tavily</a>. The agent can answer questions about current events, fresh facts, and specific URLs mid-call.
 
 ## Prerequisites
 
@@ -140,11 +140,18 @@ class TavilyTools:
         return f"Extracted content from {url}:\n\n{raw}"
 
 
+def _require_env(name: str, where: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"{name} is not set. Get one at {where} and export it before running.")
+    return value
+
+
 async def get_agent(env: AgentEnv, call_request: CallRequest):
-    tavily = TavilyTools(api_key=os.environ["TAVILY_API_KEY"])
+    tavily = TavilyTools(api_key=_require_env("TAVILY_API_KEY", "https://app.tavily.com/home"))
     return LlmAgent(
         model="openai/gpt-4o-mini",
-        api_key=os.environ["OPENAI_API_KEY"],
+        api_key=_require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys"),
         tools=[tavily.web_search, tavily.web_extract, end_call],
         config=LlmConfig(
             system_prompt=SYSTEM_PROMPT.format(today=datetime.now().strftime("%Y-%m-%d")),
@@ -168,6 +175,8 @@ python main.py
 # in another terminal:
 cartesia chat 8000
 ```
+
+You'll hear: *"Hey! I'm your research assistant, powered by Tavily and Cartesia…"* Try asking about recent news or pointing it at a specific URL.
 
 ## Configuration
 
