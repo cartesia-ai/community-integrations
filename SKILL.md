@@ -20,6 +20,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - **[REQUIRED]** `last_verified` date is within the last 30 days
 - **[REQUIRED]** Equivalent required content sections are present: overview, prerequisites, installation instructions, at least one runnable quick start example, and resources (exact heading names may vary, e.g., "Getting started" instead of "Quick start")
 - **[REQUIRED]** If images/screenshots are used, they are minimal and support setup clarity (avoid image-heavy walkthroughs)
+- **[REQUIRED]** If images/screenshots are used, store them in `assets/images/<submission-name>/`, where `<submission-name>` must match `submissions/<submission-name>.mdx`; reference them from the page using `/assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`)
 - **[RECOMMENDED]** Optional sections (Configuration) included only if they add value — deleted if empty
 - **[RECOMMENDED]** If multiple languages are shown, Mintlify `[<Tabs>](https://mintlify.com/docs/content/components/tabs)` component is used
 
@@ -49,6 +50,7 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 
 - **[REQUIRED]** Cartesia model IDs referenced are current and valid (cross-check against [docs.cartesia.ai/llms.txt](https://docs.cartesia.ai/llms.txt) and current Cartesia docs)
 - **[REQUIRED]** Cartesia SDK methods referenced exist in the current SDK version
+- **[REQUIRED]** For each product listed in `cartesia_product`, include a runnable example for that product (or remove the product from frontmatter)
 - **[REQUIRED]** Prerequisites list is complete — nothing missing that would prevent the example from running
 - **[REQUIRED]** Prerequisites are specific — include version constraints (e.g., "Python 3.10+"), required env vars (e.g., `CARTESIA_API_KEY`), account setup with signup URLs, and any API keys needed from third-party services with links to where to get them
 - **[REQUIRED]** Links in Resources section are valid and point to correct destinations
@@ -73,5 +75,5 @@ After the checklist above passes:
 - Check for duplicate/overlapping content with existing integration pages
 - Confirm the integration is relevant to Cartesia users (not a stretch)
 - Draft reply to contributor with any feedback (use PR comments)
-- Once merged: migrate to docs repo under `integrations/community/`, add nav entry to `docs.json`, deploy
+- Once merged: migrate the page to docs repo under `integrations/community/` and copy image assets to `assets/images/<submission-name>/` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`); verify all `/assets/images/...` links resolve, add nav entry to `docs.json`, deploy
 

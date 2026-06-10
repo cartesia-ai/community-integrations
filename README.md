@@ -26,8 +26,8 @@ This is **not** the place to re-document Cartesia's API, pitch your product, or 
 - One MDX file per integration, following `TEMPLATE.mdx` exactly
 - Tag which Cartesia product(s) your integration supports via `cartesia_product` in frontmatter (valid values: `tts`, `stt`, `line`)
 - All code examples must be complete and runnable (include imports)
-- No marketing language — let the code speak
-- No images or screenshots — if your integration needs a visual walkthrough, link to your own docs for that
+- Keep tone technical; avoid marketing adjectives and focus on factual integration guidance
+- Images/screenshots are allowed when used sparingly for setup clarity; store them at `assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`, and reference with `/assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`)
 - Multiple languages are welcome using Mintlify `[<Tabs>](https://mintlify.com/docs/content/components/tabs)` but not required
 - Read the [Style Guide](STYLE_GUIDE.md) before writing
 
