@@ -1,0 +1,4 @@
+.DS_Store
+
+# Internal tools and skills (not for contributors)
+internal/
