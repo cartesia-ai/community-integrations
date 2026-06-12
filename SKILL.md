@@ -20,7 +20,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - **[REQUIRED]** `last_verified` date is within the last 30 days
 - **[REQUIRED]** Equivalent required content sections are present: overview, prerequisites, installation instructions, at least one runnable quick start example, and resources (exact heading names may vary, e.g., "Getting started" instead of "Quick start")
 - **[REQUIRED]** If images/screenshots are used, they are minimal and support setup clarity (avoid image-heavy walkthroughs)
-- **[REQUIRED]** If images/screenshots are used, store them in `assets/images/<submission-name>/`, where `<submission-name>` must match `submissions/<submission-name>.mdx`; reference them from the page using `/assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`)
+- **[REQUIRED]** If images/screenshots are used, store them in `submissions/assets/images/<submission-name>/`, where `<submission-name>` must match `submissions/<submission-name>.mdx`; reference them from the page using `./assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` → `submissions/assets/images/truefoundry/`)
 - **[RECOMMENDED]** Optional sections (Configuration) included only if they add value — deleted if empty
 - **[RECOMMENDED]** If multiple languages are shown, Mintlify `[<Tabs>](https://mintlify.com/docs/content/components/tabs)` component is used
 
@@ -62,6 +62,7 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 ## Scope
 
 - **[REQUIRED]** Submission is one `.mdx` integration page in `submissions/` (supporting image assets are allowed when used sparingly for setup clarity)
+- **[REQUIRED]** PR only adds/modifies files inside `submissions/` — do not touch repo infrastructure files (README, TEMPLATE, SKILL, STYLE_GUIDE, etc.)
 - **[REQUIRED]** No pricing, competitive comparisons, or product pitches
 - **[REQUIRED]** No claims about Cartesia's performance, roadmap, or capabilities beyond what's documented
 
@@ -75,5 +76,5 @@ After the checklist above passes:
 - Check for duplicate/overlapping content with existing integration pages
 - Confirm the integration is relevant to Cartesia users (not a stretch)
 - Draft reply to contributor with any feedback (use PR comments)
-- Once merged: migrate the page to docs repo under `integrations/community/` and copy image assets to `assets/images/<submission-name>/` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`); verify all `/assets/images/...` links resolve, add nav entry to `docs.json`, deploy
+- Once merged: use the merge skill at `internal/skills/merge/SKILL.md` to migrate the page to docs repo under `integrations/community/`, copy image assets from `submissions/assets/images/<name>/` to `assets/images/integrations/<name>/`, update image refs from `./assets/images/<name>/` to `/assets/images/integrations/<name>/`, add nav entry to `docs.json`, deploy
 
