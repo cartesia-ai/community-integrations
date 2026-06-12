@@ -139,7 +139,7 @@ async def main():
     with open(AUDIO_FILE, "rb") as f:
         response = await client.stt.transcribe(
             file=f,
-            model="ink-whisper",  # must match a model ID registered in AI Gateway
+            model="ink-2",  # must match a model ID registered in AI Gateway
             language="en",
         )
     print(response.text)
