@@ -67,11 +67,13 @@ Open with what the integration enables (one sentence). Show the smallest working
 
 Don't write multi-paragraph introductions before showing code. Show the Developer how it works sooner rather than later.
 
-If you need to provide background on your product, link to your own docs rather than explaining it here. Use HTML for external links so they open in a new tab: `<a href="https://..." target="_blank">link text</a>`
+If you need to provide background on your product, link to your own docs rather than explaining it here. Use markdown links for external links: `[link text](https://...)`
 
 ## Linking
 
 **Link key terms on first mention.** When you reference a Cartesia product or feature (e.g., "Cartesia Line agent", "Sonic TTS", "Ink STT"), link to its page on docs.cartesia.ai the first time it appears. Same for your own product terms — link to your developer docs, not your marketing homepage. Don't repeat the link after the first mention.
+
+**Use markdown links everywhere.** Use markdown links for both internal and external links. Do not use HTML `<a>` tags.
 
 **Use canonical URLs.** Prefer clean docs URLs without file suffixes (e.g., `https://docs.example.com/guide` not `https://docs.example.com/guide.md`) when both resolve to the same page.
 

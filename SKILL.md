@@ -56,7 +56,7 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 - **[REQUIRED]** Prerequisites are specific — include version constraints (e.g., "Python 3.10+"), required env vars (e.g., `CARTESIA_API_KEY`), account setup with signup URLs, and any API keys needed from third-party services with links to where to get them
 - **[REQUIRED]** Links in Resources section are valid and point to correct destinations
 - **[REQUIRED]** Internal Cartesia docs links use markdown with absolute internal paths (e.g., `[Line agents](/line/sdk/agents)`), not HTML `<a>` tags
-- **[REQUIRED]** External links use HTML with target="_blank"
+- **[REQUIRED]** External links use markdown format (e.g., `[Tavily docs](https://docs.tavily.com)`), not HTML `<a>` tags
 - **[REQUIRED]** Resource links use canonical URLs (no unnecessary file suffixes like `.md`)
 - **[REQUIRED]** Page includes a visible "Last verified" date and contributor attribution
 - **[REQUIRED]** Frontmatter URLs (`contributor_url`, `developer_website`, `developer_docs`) are valid
