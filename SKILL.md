@@ -38,6 +38,7 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 
 - **[REQUIRED]** Overview is 1-2 sentences, states what the integration enables
 - **[RECOMMENDED]** Avoid marketing adjectives ("powerful", "seamless", "cutting-edge", "easy", "simple"); prefer factual, verifiable statements
+- **[RECOMMENDED]** If frontmatter `description` is a single line, do not end it with a period
 - **[REQUIRED]** Does not re-document Cartesia's API — focuses on the *integration* use case
 - **[REQUIRED]** Active voice, present tense throughout
 - **[REQUIRED]** No filler phrases ("in order to", "it's important to note", "as mentioned above")
@@ -54,6 +55,7 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 - **[REQUIRED]** Prerequisites list is complete — nothing missing that would prevent the example from running
 - **[REQUIRED]** Prerequisites are specific — include version constraints (e.g., "Python 3.10+"), required env vars (e.g., `CARTESIA_API_KEY`), account setup with signup URLs, and any API keys needed from third-party services with links to where to get them
 - **[REQUIRED]** Links in Resources section are valid and point to correct destinations
+- **[REQUIRED]** Internal Cartesia docs links use markdown with absolute internal paths (e.g., `[Line agents](/line/sdk/agents)`), not HTML `<a>` tags
 - **[REQUIRED]** External links use HTML with target="_blank"
 - **[REQUIRED]** Resource links use canonical URLs (no unnecessary file suffixes like `.md`)
 - **[REQUIRED]** Page includes a visible "Last verified" date and contributor attribution
