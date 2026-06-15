@@ -1,6 +1,7 @@
 ---
 title: "Avaturn + Cartesia Line"
-description: "Connect an Avaturn avatar session to a deployed Cartesia Line agent for voice conversations."
+description: "Connect an Avaturn avatar session to a deployed Cartesia Line agent for voice conversations"
+icon: waves-sine
 last_verified: "2026-05-26"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -15,19 +16,19 @@ developer_website: "https://avaturn.me"
 developer_docs: "https://docs.avaturn.live"
 ---
 
-<Note>Community integration by **Avaturn**. Last verified: 2026-05-26.</Note>
+<Check>Last verified: 2026-05-26</Check>
 
 ## Overview
 
-Use this integration to run a deployed <a href="https://docs.cartesia.ai/line/sdk/agents" target="_blank">Cartesia Line agent</a> behind an <a href="https://docs.avaturn.live" target="_blank">Avaturn</a> avatar. Your Cartesia agent handles prompts, tools, voice, and LLM behavior, while Avaturn handles the avatar session and rendering.
+Use this integration to run a deployed [Cartesia Line agent](https://docs.cartesia.ai/line/sdk/agents) behind an [Avaturn](https://docs.avaturn.live) avatar. Your Cartesia agent handles prompts, tools, voice, and LLM behavior, while Avaturn handles the avatar session and rendering.
 
 ## Prerequisites
 
-- Cartesia Line agent deployed with an `agent_id` (<a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">quickstart</a>)
-- Cartesia API key (`CARTESIA_API_KEY`) from <a href="https://play.cartesia.ai/keys" target="_blank">Cartesia keys</a>
-- Avaturn API key (`AVATURN_API_KEY`) from the <a href="https://avaturn.live/dashboard" target="_blank">Avaturn dashboard</a>
+- Cartesia Line agent deployed with an `agent_id` ([quickstart](https://docs.cartesia.ai/line/start-building/quickstart))
+- Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
+- Avaturn API key (`AVATURN_API_KEY`) from the [Avaturn dashboard](https://avaturn.live/dashboard)
 - Node.js 18+ for the backend token/session endpoint
-- A frontend app that can render Avaturn Web SDK (<a href="https://docs.avaturn.live/web-sdk/integration-guide" target="_blank">integration guide</a>)
+- A frontend app that can render Avaturn Web SDK ([integration guide](https://docs.avaturn.live/web-sdk/integration-guide))
 
 ## Installation
 
@@ -45,7 +46,7 @@ Set your Node project to ESM so the backend and frontend snippets work as writte
 
 ## Quick start
 
-Create a Cartesia access token with the <a href="https://docs.cartesia.ai/api-reference/auth/access-token" target="_blank">Auth API</a>, create an Avaturn session with the Cartesia engine, then initialize the avatar in the browser with the returned session token.
+Create a Cartesia access token with the [Auth API](https://docs.cartesia.ai/api-reference/auth/access-token), create an Avaturn session with the Cartesia engine, then initialize the avatar in the browser with the returned session token.
 
 ### 1) Backend: mint Cartesia token and create Avaturn session
 
@@ -152,7 +153,7 @@ await startAvatar(cartesiaAgentId);
 
 ## Resources
 
-- <a href="https://docs.avaturn.live/howtos/cartesia" target="_blank">Avaturn Cartesia integration guide</a>
-- <a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">Cartesia Line quickstart</a>
-- <a href="https://docs.cartesia.ai/get-started/authenticate-your-client-applications" target="_blank">Cartesia authentication guide</a>
-- <a href="https://docs.avaturn.live/web-sdk/integration-guide" target="_blank">Avaturn Web SDK integration guide</a>
+- [Avaturn Cartesia integration guide](https://docs.avaturn.live/howtos/cartesia)
+- [Cartesia Line quickstart](https://docs.cartesia.ai/line/start-building/quickstart)
+- [Cartesia authentication guide](https://docs.cartesia.ai/get-started/authenticate-your-client-applications)
+- [Avaturn Web SDK integration guide](https://docs.avaturn.live/web-sdk/integration-guide)

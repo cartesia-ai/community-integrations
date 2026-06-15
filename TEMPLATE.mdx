@@ -1,6 +1,6 @@
 ---
 title: "Your Integration Name + Cartesia"
-description: "One sentence: what this integration enables."
+description: "One sentence about what this integration enables with no full stop or period"
 last_verified: "YYYY-MM-DD"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -9,7 +9,7 @@ contributor_email: "you@example.com"
 contributor_url: "https://your-site.com"
 
 # Integration metadata
-cartesia_product: [tts]  # one or more of: tts, stt, line
+cartesia_product: [tts,stt,line]  # remove products to match your integration
 developer: "Your Company Name"
 developer_website: "https://your-site.com"
 developer_docs: "https://your-site.com/docs"
@@ -21,13 +21,16 @@ developer_docs: "https://your-site.com/docs"
   1. Copy this file to submissions/your-integration-name.mdx
   2. Fill in every section below
   3. Delete all instructional comments
-  4. Images are allowed when used sparingly for setup clarity. Store them at `assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`, and reference with `/assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` -> `assets/images/truefoundry/`)
+  4. Images are allowed when used sparingly for setup clarity. Store them at `assets/images/integrations/<submission-name>/` (at the repo root, not under `submissions/`) where `<submission-name>` matches `submissions/<submission-name>.mdx`, and reference them by that same path `/assets/images/integrations/<submission-name>/<file>` (example: store at `assets/images/integrations/truefoundry/`, reference as `/assets/images/integrations/truefoundry/<file>`). Wrap each image in a Mintlify <Frame>:
+       <Frame caption="Optional description of the screenshot">
+         <img src="/assets/images/integrations/<submission-name>/<file>" alt="Descriptive alt text" />
+       </Frame>
   5. Code examples can use Mintlify <Tabs> for multiple languages (see below)
-  6. Self-review against SKILL.md
+  6. Self-review against CONTRIBUTING.md
   7. Open a PR
 */}
 
-<Note>Integration by **Your Name or Company**. Last verified: YYYY-MM-DD.</Note>
+<Check>Last verified: YYYY-MM-DD</Check>
 
 ## Overview
 
@@ -41,19 +44,16 @@ What the developer needs before starting:
 - Your tool installed / account created (link to your setup docs)
 - Any other dependencies
 
-## Installation
-
-```bash
-pip install your-package cartesia
-```
-
 ## Quick start
 
-A single, complete, copy-paste-and-run example showing the core use case. This is the most important section.
+A complete, copy-paste-and-run walkthrough showing the core use case. This is the most important section. Use `<Steps>` to break the setup into sequential actions.
 
 {/* 
-  If your integration supports multiple languages, use Mintlify tabs:
-  
+  Each <Step> is one sequential action. Put the code, commands, or notes for
+  that action inside its <Step>. Add or remove steps to match your flow.
+
+  If your integration supports multiple languages, use Mintlify tabs inside a step:
+
   <Tabs>
     <Tab title="Python">
     ```python
@@ -70,28 +70,50 @@ A single, complete, copy-paste-and-run example showing the core use case. This i
   If you only support one language, just use a single code block (no tabs needed).
 */}
 
-```python
-from cartesia import Cartesia
+<Steps>
+  <Step title="Install the packages">
+    ```bash
+    pip install your-package cartesia
+    ```
+  </Step>
 
-client = Cartesia(api_key="your-api-key")
+  <Step title="Configure your API key">
+    Set your Cartesia API key as an environment variable so it isn't hard-coded:
 
-# Show the integration working end-to-end
-# Use realistic variable names
-# Add comments only for non-obvious lines
-```
+    ```bash
+    export CARTESIA_API_KEY="your-api-key"
+    ```
+  </Step>
+
+  <Step title="Run the integration">
+    ```python
+    from cartesia import Cartesia
+
+    client = Cartesia(api_key="your-api-key")
+
+    # Show the integration working end-to-end
+    # Use realistic variable names
+    # Add comments only for non-obvious lines
+    ```
+  </Step>
+</Steps>
 
 ## Configuration
 
-If your integration has configuration options relevant to the Cartesia usage, document them here as a table:
+If your integration has configuration options relevant to the Cartesia usage, document them here with a `<ParamField>` for each one:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `param_name` | `string` | `"default"` | What it controls |
+<ParamField path="name_of_the_required_param" type="string" required>
+  What it controls.
+</ParamField>
+
+<ParamField path="name_of_the_optional_param" type="boolean" default="false">
+  What it controls.
+</ParamField>
 
 {/* Delete this section if there's nothing to configure beyond the quick start. */}
 
 ## Resources
 
 - [Your integration docs](https://link)
-- [Cartesia API reference](https://docs.cartesia.ai/api-reference)
+- [Cartesia API reference](/api-reference/<path>)
 - [Your support / community channel](https://link)
