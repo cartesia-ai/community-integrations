@@ -1,6 +1,6 @@
 ---
 title: "Tavily + Cartesia Line"
-description: "Give a Cartesia Line voice agent live web search and page extraction via the Tavily API."
+description: "Give a Cartesia Line voice agent live web search and page extraction via the Tavily API"
 last_verified: "2026-06-03"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -15,19 +15,19 @@ developer_website: "https://tavily.com"
 developer_docs: "https://docs.tavily.com"
 ---
 
-<Note>Community integration by **Tavily**. Last verified: 2026-06-03.</Note>
+<Check>Last verified: 2026-06-03</Check>
 
 ## Overview
 
-Add live web search and page extraction to a <a href="https://docs.cartesia.ai/line/sdk/agents" target="_blank">Cartesia Line</a> voice agent using <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">loopback tools</a> backed by <a href="https://docs.tavily.com" target="_blank">Tavily</a>. The agent can answer questions about current events, fresh facts, and specific URLs mid-call.
+Add live web search and page extraction to a [Cartesia Line](/line/sdk/agents) voice agent using [loopback tools](/line/sdk/tools) backed by [Tavily](https://docs.tavily.com). The agent can answer questions about current events, fresh facts, and specific URLs mid-call.
 
 ## Prerequisites
 
 - Python 3.10+
-- A Cartesia API key (`CARTESIA_API_KEY`) from <a href="https://play.cartesia.ai/keys" target="_blank">Cartesia keys</a>
-- A Tavily API key (`TAVILY_API_KEY`) from the <a href="https://app.tavily.com/home" target="_blank">Tavily dashboard</a>
+- A Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
+- A Tavily API key (`TAVILY_API_KEY`) from the [Tavily dashboard](https://app.tavily.com/home)
 - An LLM provider key — `OPENAI_API_KEY` for the example below
-- The Cartesia CLI for local chat testing (<a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">Line quickstart</a>)
+- The Cartesia CLI for local chat testing ([Line quickstart](/line/start-building/quickstart))
 
 ## Installation
 
@@ -45,7 +45,7 @@ export OPENAI_API_KEY="..."
 
 ## Quick start
 
-Define two <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">loopback tools</a> backed by `AsyncTavilyClient` — one for search, one for full-page extraction — and pass them to an `LlmAgent`. Run the file, then connect with `cartesia chat 8000`.
+Define two [loopback tools](/line/sdk/tools) backed by `AsyncTavilyClient` — one for search, one for full-page extraction — and pass them to an `LlmAgent`. Run the file, then connect with `cartesia chat 8000`.
 
 ```python
 """Voice research agent: Cartesia Line + Tavily."""
@@ -189,11 +189,11 @@ Both tools accept the standard Tavily parameters — these are the ones worth tu
 | `time_range` | `string` | `None` | Recency filter — `"day"`, `"week"`, `"month"`, `"year"`. |
 | `EXTRACT_MAX_CHARS` | `int` | `3000` | Local cap on extracted page content to keep the LLM context tight. |
 
-See the <a href="https://docs.tavily.com/documentation/api-reference/endpoint/search" target="_blank">Tavily Search API reference</a> for the full parameter set, including `topic`, `include_domains`, and `country`.
+See the [Tavily Search API reference](https://docs.tavily.com/documentation/api-reference/endpoint/search) for the full parameter set, including `topic`, `include_domains`, and `country`.
 
 ## Resources
 
-- <a href="https://github.com/cartesia-ai/line/tree/main/example_integrations/tavily" target="_blank">Runnable example in the Cartesia Line repo</a>
-- <a href="https://docs.tavily.com" target="_blank">Tavily documentation</a>
-- <a href="https://docs.cartesia.ai/line/start-building/quickstart" target="_blank">Cartesia Line quickstart</a>
-- <a href="https://docs.cartesia.ai/line/sdk/tools" target="_blank">Cartesia Line tools reference</a>
+- [Runnable example in the Cartesia Line repo](https://github.com/cartesia-ai/line/tree/main/example_integrations/tavily)
+- [Tavily documentation](https://docs.tavily.com)
+- [Cartesia Line quickstart](/line/start-building/quickstart)
+- [Cartesia Line tools reference](/line/sdk/tools)

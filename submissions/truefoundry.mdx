@@ -1,5 +1,5 @@
 ---
-title: "TrueFoundry"
+title: "TrueFoundry + Cartesia"
 description: "Route Cartesia TTS and STT through TrueFoundry's AI Gateway"
 last_verified: "2026-06-10"
 
@@ -15,7 +15,7 @@ developer_website: "https://www.truefoundry.com"
 developer_docs: "https://www.truefoundry.com/docs/ai-gateway/cartesia"
 ---
 
-<Note>Community integration by **TrueFoundry**. Last verified: 2026-06-10.</Note>
+<Check>Last verified: 2026-06-10</Check>
 
 ## Overview
 
@@ -25,31 +25,31 @@ developer_docs: "https://www.truefoundry.com/docs/ai-gateway/cartesia"
 
 ## Prerequisites
 
-- Sign up for a <a href="https://www.truefoundry.com" target="_blank">TrueFoundry account</a>
-- Get a TrueFoundry API key (`TFY_API_KEY`) from <a href="https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway" target="_blank">making requests via the gateway</a>
-- Get a Cartesia API key from <a href="https://play.cartesia.ai/keys" target="_blank">Cartesia keys</a>
+- Sign up for a [TrueFoundry account](https://www.truefoundry.com)
+- Get a TrueFoundry API key (`TFY_API_KEY`) from [making requests via the gateway](https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway)
+- Get a Cartesia API key from [Cartesia keys](https://play.cartesia.ai/keys)
 - Python 3.10+
 
 Follow these steps to connect Cartesia in AI Gateway:
 
 <Steps>
-  <Step title="Navigate to Cartesia Models in AI Gateway">
-    In the TrueFoundry dashboard, go to **AI Gateway** → **Models** and select **Cartesia**. See <a href="https://www.truefoundry.com/docs/ai-gateway/cartesia" target="_blank">TrueFoundry Cartesia setup</a> for the full navigation path.
+  <Step title="Navigate to Cartesia Models in AI Gateway" titleSize="h3">
+    In the TrueFoundry dashboard, go to **AI Gateway** → **Models** and select **Cartesia**. See [TrueFoundry Cartesia setup](https://www.truefoundry.com/docs/ai-gateway/cartesia) for the full navigation path.
   </Step>
 
-  <Step title="Add Cartesia Account Details">
-    Click **Add Cartesia Account**. Enter a unique account name and your Cartesia **API Key**. Optionally add collaborators so other users or teams can use this account — see <a href="https://www.truefoundry.com/docs/ai-gateway/gateway-access-control" target="_blank">gateway access control</a>.
+  <Step title="Add Cartesia Account Details" titleSize="h3">
+    Click **Add Cartesia Account**. Enter a unique account name and your Cartesia **API Key**. Optionally add collaborators so other users or teams can use this account — see [gateway access control](https://www.truefoundry.com/docs/ai-gateway/gateway-access-control).
 
     <Frame caption="Cartesia Model Account Form">
-      <img src="./assets/images/truefoundry/cartesia2.png" alt="Cartesia account configuration form with fields for API key and collaborators" />
+      <img src="assets/images/truefoundry/cartesia2.png" alt="Cartesia account configuration form with fields for API key and collaborators" />
     </Frame>
   </Step>
 
-  <Step title="Add Models">
+  <Step title="Add Models" titleSize="h3">
     Click **+ Add Model** and set **Display name**, **Model ID**, and **Model type**.
 
     <Frame caption="Add Cartesia Model">
-      <img src="./assets/images/truefoundry/cartesia3.png" alt="Add Cartesia model form with display name, model ID, and model type" />
+      <img src="assets/images/truefoundry/cartesia3.png" alt="Add Cartesia model form with display name, model ID, and model type" />
     </Frame>
 
     For Cartesia, **Model ID** and **Display name** must be identical.
@@ -170,6 +170,6 @@ After models are registered, open any Cartesia model in the TrueFoundry dashboar
 
 ## Resources
 
-- <a href="https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway" target="_blank">Making requests via the gateway</a>
+- [Making requests via the gateway](https://www.truefoundry.com/docs/ai-gateway/making-llm-requests-via-gateway)
 - [Cartesia TTS API reference](/api-reference/tts/tts)
 - [Cartesia STT API reference](/api-reference/stt/transcribe)

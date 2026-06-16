@@ -1,17 +1,16 @@
 # Community Integrations
 
-Third-party integration pages for [Cartesia documentation](https://docs.cartesia.ai). If you've built something something that integrates your product with Cartesia,  and want it listed on our docs site, this is where you submit it.
+Third-party integration pages for [Cartesia documentation](https://docs.cartesia.ai). If you've built something that integrates your product with Cartesia and want it listed on our docs site, this is where you submit it.
 
 ## How it works
 
 1. Fork this repo
 2. Copy `TEMPLATE.mdx` into `submissions/your-integration-name.mdx`
 3. Write your page following the template and [Style Guide](STYLE_GUIDE.md)
-4. Self-review against the checklist in [SKILL.md](SKILL.md)
+4. Self-review against the checklist in [SKILL.md](SKILL.md) (using a coding agent or otherwise)
 5. Open a pull request and tag @zeuslawyer for review
 
-A Cartesia team member will review your PR using the same SKILL.md checklist. We may have  
- feedback — we hold a high quality bar. Once approved and merged, we'll publish the page to `docs.cartesia.ai/integrations/community/your-integration-name`.
+A Cartesia team member will review your PR using the same [SKILL.md](SKILL.md) checklist. We may have feedback — we hold a high quality bar. Once approved and merged, we'll publish the page to `docs.cartesia.ai/integrations/community/your-integration-name`.
 
 ## What belongs here
 
@@ -27,9 +26,8 @@ This is **not** the place to re-document Cartesia's API, pitch your product, or 
 - Tag which Cartesia product(s) your integration supports via `cartesia_product` in frontmatter (valid values: `tts`, `stt`, `line`)
 - All code examples must be complete and runnable (include imports)
 - Keep tone technical; avoid marketing adjectives and focus on factual integration guidance
-- Images/screenshots are allowed when used sparingly for setup clarity; store them at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`, and reference with `./assets/images/<submission-name>/<file>` (example: `submissions/truefoundry.mdx` → `submissions/assets/images/truefoundry/`)
+- Images/screenshots are allowed when used sparingly for setup clarity; store them at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`
 - Your PR should only add/modify files inside `submissions/` — do not modify repo files like README, TEMPLATE, SKILL, etc.
-- Multiple languages are welcome using Mintlify `[<Tabs>](https://mintlify.com/docs/content/components/tabs)` but not required
 - Read the [Style Guide](STYLE_GUIDE.md) before writing
 
 ## Maintenance policy
@@ -42,8 +40,10 @@ You own your page. Here's what that means:
 - **At 12 months** without re-verification: we email again — the page will be unpublished in 2 weeks if not re-verified
 - **At 12 months + 2 weeks**, no response: the page is unpublished
 
-To re-verify, open a PR updating the `last_verified` date (and fix anything that's changed). This resets the clock. Use [SKILL.md](SKILL.md) as your self-review checklist before submitting.
+To re-verify, open a PR updating the `last_verified` date (and fix anything that's changed). This resets the clock.
 
 ## Questions?
 
 Open an issue on this repo.
+
+See the [Mintlify docs](https://www.mintlify.com/docs/components/index) for help working with MDX components (e.g. `<Tabs>`).

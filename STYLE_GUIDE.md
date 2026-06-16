@@ -80,7 +80,6 @@ If you need to provide background on your product, link to your own docs rather 
 ## Formatting
 
 - Use inline code for identifiers: `model_id`, `"sonic-2024-10-25"`, `True`
-- Use tables for 3+ related parameters
 - Use lists only for genuinely parallel items, not as a substitute for prose
 - Bold UI elements: click **Create Voice**
 

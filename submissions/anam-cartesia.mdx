@@ -1,6 +1,6 @@
 ---
 title: "Anam + Cartesia"
-description: "Use a Cartesia Sonic TTS voice in an Anam interactive avatar session."
+description: "Use a Cartesia Sonic TTS voice in an Anam interactive avatar session"
 last_verified: "2026-06-11"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -15,17 +15,17 @@ developer_website: "https://anam.ai"
 developer_docs: "https://anam.ai/docs"
 ---
 
-<Note>Community integration by **Anam**. Last verified: 2026-06-11.</Note>
+<Check>Last verified: 2026-06-11</Check>
 
 ## Overview
 
-Use this integration to run an <a href="https://anam.ai/docs" target="_blank">Anam</a> interactive avatar with a <a href="https://docs.cartesia.ai/build-with-cartesia/tts-models/latest" target="_blank">Cartesia Sonic TTS</a> voice. Anam handles the avatar session, WebRTC stream, and rendering, while a Cartesia voice provides the speech output.
+Use this integration to run an [Anam](https://anam.ai/docs) interactive avatar with a [Cartesia Sonic TTS](/build-with-cartesia/tts-models/latest) voice. Anam handles the avatar session, WebRTC stream, and rendering, while a Cartesia voice provides the speech output.
 
 ## Prerequisites
 
-- Anam API key (`ANAM_API_KEY`) from the <a href="https://lab.anam.ai/api-keys" target="_blank">Anam Lab API keys page</a>
+- Anam API key (`ANAM_API_KEY`) from the [Anam Lab API keys page](https://lab.anam.ai/api-keys)
 - Node.js 18+ for the backend token endpoint
-- A frontend app that can render the Anam JavaScript SDK (<a href="https://anam.ai/docs/javascript-sdk/production" target="_blank">production guide</a>)
+- A frontend app that can render the Anam JavaScript SDK ([production guide](https://anam.ai/docs/javascript-sdk/production))
 
 This flow does not require a Cartesia API key in your app. Anam uses the saved Cartesia voice attached to the Anam `voiceId`.
 
@@ -106,7 +106,7 @@ app.post("/api/anam-session", async (req, res) => {
 app.listen(3000);
 ```
 
-The `voiceId` value is an Anam voice ID for a Cartesia voice, not a raw Cartesia provider voice ID. To find another one with the API, call the <a href="https://anam.ai/docs/api-reference/voices/list-voices" target="_blank">list voices endpoint</a> and choose a voice where `provider` is `CARTESIA`. As of writing, Anam Lab lists 304 stock Cartesia voices.
+The `voiceId` value is an Anam voice ID for a Cartesia voice, not a raw Cartesia provider voice ID. To find another one with the API, call the [list voices endpoint](https://anam.ai/docs/api-reference/voices/list-voices) and choose a voice where `provider` is `CARTESIA`. As of writing, Anam Lab lists 304 stock Cartesia voices.
 
 ```bash
 curl "https://api.anam.ai/v1/voices?perPage=100&search=voice-name" \
@@ -155,15 +155,15 @@ When the session starts, the video element shows Liv speaking with the Siobhan C
 
 ## Voice and performance options
 
-Use `voiceGenerationOptions` on the session token request to set Cartesia voice generation controls for the session, such as `speed`, `volume`, and `emotion`. See Anam's <a href="https://anam.ai/docs/personas/voices/configuration" target="_blank">voice configuration</a> docs for supported values.
+Use `voiceGenerationOptions` on the session token request to set Cartesia voice generation controls for the session, such as `speed`, `volume`, and `emotion`. See Anam's [voice configuration](https://anam.ai/docs/personas/voices/configuration) docs for supported values.
 
-<Note>For advanced performance control, Anam can preserve Cartesia-supported inline cues in the transcript while also using the same cue names for avatar Director Notes where enabled. For example, Cartesia documents <a href="https://docs.cartesia.ai/build-with-cartesia/capability-guides/ssml-tags" target="_blank">speech control tags</a>; Anam can use a matching `laughter` cue to shift the avatar toward a playful visual style.</Note>
+<Note>For advanced performance control, Anam can preserve Cartesia-supported inline cues in the transcript while also using the same cue names for avatar Director Notes where enabled. For example, Cartesia documents [speech control tags](/build-with-cartesia/capability-guides/ssml-tags); Anam can use a matching `laughter` cue to shift the avatar toward a playful visual style.</Note>
 
 ## Resources
 
-- <a href="https://anam.ai/docs/javascript-sdk/production" target="_blank">Anam JavaScript SDK production guide</a>
-- <a href="https://anam.ai/docs/api-reference/sessions/create-session-token" target="_blank">Anam create session token API</a>
-- <a href="https://anam.ai/docs/api-reference/voices/list-voices" target="_blank">Anam list voices API</a>
-- <a href="https://anam.ai/docs/personas/voices/custom-voices" target="_blank">Anam custom voices guide</a>
-- <a href="https://docs.cartesia.ai/build-with-cartesia/capability-guides/volume-speed-emotion" target="_blank">Cartesia volume, speed, and emotion controls</a>
-- <a href="https://docs.cartesia.ai/build-with-cartesia/capability-guides/ssml-tags" target="_blank">Cartesia speech control tags</a>
+- [Anam JavaScript SDK production guide](https://anam.ai/docs/javascript-sdk/production)
+- [Anam create session token API](https://anam.ai/docs/api-reference/sessions/create-session-token)
+- [Anam list voices API](https://anam.ai/docs/api-reference/voices/list-voices)
+- [Anam custom voices guide](https://anam.ai/docs/personas/voices/custom-voices)
+- [Cartesia volume, speed, and emotion controls](/build-with-cartesia/capability-guides/volume-speed-emotion)
+- [Cartesia speech control tags](/build-with-cartesia/capability-guides/ssml-tags)
