@@ -49,3 +49,7 @@ When writing or reviewing Cartesia-specific claims (model IDs, SDK method/parame
 ## Internal merge flow (reviewer-only)
 
 After a PR passes review and is merged, the page is migrated into Cartesia's docs repo using the gitignored skill at `internal/skills/merge/SKILL.md` (the `internal/` directory is excluded via `.gitignore` and not available to contributors). The merge copies the page to `integrations/community/<name>.mdx`, copies the asset directory `submissions/assets/images/<name>/` into the docs site's `assets/images/integrations/<name>/`, and rewrites the page's submission-relative image refs (`assets/images/<name>/<file>`) to the docs-site form (`/assets/images/integrations/<name>/<file>`). It also adds a `docs.json` nav entry. Submissions deliberately keep their assets self-contained under `submissions/`, so this path rewrite is part of the merge.
+
+## Reference
+
+Use [genesys-tts-connector-cartesia-sonic.mdx](submissions/genesys-tts-connector-cartesia-sonic.mdx) as an example that follows many best practices.
