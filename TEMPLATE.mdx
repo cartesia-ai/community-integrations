@@ -81,19 +81,11 @@ A complete, copy-paste-and-run walkthrough showing the core use case. This is th
     ```
   </Step>
 
-  <Step title="Configure your API key" titleSize="h3">
-    Set your Cartesia API key as an environment variable so it isn't hard-coded:
-
-    ```bash
-    export CARTESIA_API_KEY="your-api-key"
-    ```
-  </Step>
-
   <Step title="Run the integration" titleSize="h3">
     ```python
     from cartesia import Cartesia
 
-    client = Cartesia(api_key="your-api-key")
+    client = Cartesia()
 
     # Show the integration working end-to-end
     # Use realistic variable names
@@ -104,15 +96,12 @@ A complete, copy-paste-and-run walkthrough showing the core use case. This is th
 
 ## Configuration
 
-If your integration has configuration options relevant to the Cartesia usage, document them here with a `<ParamField>` for each one:
+If your integration has configuration options relevant to the Cartesia usage,
+document them here as a table using compact GFM table syntax (no space padding):
 
-<ParamField path="name_of_the_required_param" type="string" required>
-  What it controls.
-</ParamField>
-
-<ParamField path="name_of_the_optional_param" type="boolean" default="false">
-  What it controls.
-</ParamField>
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `param_name` | `string` | `"default"` | What it controls |
 
 {/* Delete this section if there's nothing to configure beyond the quick start. */}
 

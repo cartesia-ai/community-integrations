@@ -33,7 +33,7 @@ When reviewing, the checklist in `SKILL.md` is the source of truth — apply it 
 - `cartesia_product` is a list whose only valid values are `tts`, `stt`, `line`. Each listed product needs its own runnable example, or it should be dropped from the list.
 - `last_verified` must be within the last 30 days at submission time (this also drives the maintenance/re-verification clock described in `README.md`).
 - Images (used sparingly, for setup clarity only) live at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches the `.mdx` filename, and are referenced by the submission-relative path `assets/images/<submission-name>/<file>` (no leading slash). Everything a contributor adds therefore stays inside `submissions/`; the docs-site paths are produced later by the merge step. Each image is wrapped in a `<Frame>` containing an `<img>`.
-- MDX uses Mintlify components (`<Steps>`, `<Step>`, `<Tabs>`, `<Frame>`, `<ParamField>`, `<Check>`).
+- MDX uses Mintlify components (`<Steps>`, `<Step>`, `<Tabs>`, `<Frame>`).
 
 ## Hard constraint: scope of changes
 
