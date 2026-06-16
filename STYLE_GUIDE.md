@@ -82,7 +82,6 @@ If you need to provide background on your product, link to your own docs rather 
 - Use inline code for identifiers: `model_id`, `"sonic-2024-10-25"`, `True`
 - Use lists only for genuinely parallel items, not as a substitute for prose
 - Bold UI elements: click **Create Voice**
-- Follow [TEMPLATE.mdx](TEMPLATE.mdx); see the [Mintlify docs](https://www.mintlify.com/docs/components/index) for help working with MDX
 
 ## Length
 

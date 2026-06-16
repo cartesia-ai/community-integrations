@@ -21,13 +21,17 @@ developer_docs: "https://your-site.com/docs"
   1. Copy this file to submissions/your-integration-name.mdx
   2. Fill in every section below
   3. Delete all instructional comments
-  4. Images are allowed when used sparingly for setup clarity. Store them at `assets/images/integrations/<submission-name>/` (at the repo root, not under `submissions/`) where `<submission-name>` matches `submissions/<submission-name>.mdx`, and reference them by that same path `/assets/images/integrations/<submission-name>/<file>` (example: store at `assets/images/integrations/truefoundry/`, reference as `/assets/images/integrations/truefoundry/<file>`). Wrap each image in a Mintlify <Frame>:
+  4. Images are allowed when used sparingly for setup clarity.
+     Store them at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`,
+    and reference them by the submission-relative path `assets/images/<submission-name>/<file>`. Wrap each image in a Mintlify <Frame>:
        <Frame caption="Optional description of the screenshot">
-         <img src="/assets/images/integrations/<submission-name>/<file>" alt="Descriptive alt text" />
+         <img src="assets/images/<submission-name>/<file>" alt="Descriptive alt text" />
        </Frame>
   5. Code examples can use Mintlify <Tabs> for multiple languages (see below)
-  6. Self-review against CONTRIBUTING.md
+  6. Self-review against SKILL.md
   7. Open a PR
+
+  See the [Mintlify docs](https://www.mintlify.com/docs/components/index) for help working with MDX components like <Frame>.
 */}
 
 <Check>Last verified: YYYY-MM-DD</Check>
@@ -71,13 +75,13 @@ A complete, copy-paste-and-run walkthrough showing the core use case. This is th
 */}
 
 <Steps>
-  <Step title="Install the packages">
+  <Step title="Install the packages" titleSize="h3">
     ```bash
     pip install your-package cartesia
     ```
   </Step>
 
-  <Step title="Configure your API key">
+  <Step title="Configure your API key" titleSize="h3">
     Set your Cartesia API key as an environment variable so it isn't hard-coded:
 
     ```bash
@@ -85,7 +89,7 @@ A complete, copy-paste-and-run walkthrough showing the core use case. This is th
     ```
   </Step>
 
-  <Step title="Run the integration">
+  <Step title="Run the integration" titleSize="h3">
     ```python
     from cartesia import Cartesia
 

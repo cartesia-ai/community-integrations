@@ -1,10 +1,16 @@
 # Community Integrations
 
-Third-party integration pages for [Cartesia documentation](https://docs.cartesia.ai). If you've built something that integrates your product with Cartesia, and want it listed on our docs site, this is where you submit it.
+Third-party integration pages for [Cartesia documentation](https://docs.cartesia.ai). If you've built something that integrates your product with Cartesia and want it listed on our docs site, this is where you submit it.
 
-## Contributing
+## How it works
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for a step-by-step guide to get your integration on the Cartesia docs.
+1. Fork this repo
+2. Copy `TEMPLATE.mdx` into `submissions/your-integration-name.mdx`
+3. Write your page following the template and [Style Guide](STYLE_GUIDE.md)
+4. Self-review against the checklist in [SKILL.md](SKILL.md) (using a coding agent or otherwise)
+5. Open a pull request and tag @zeuslawyer for review
+
+A Cartesia team member will review your PR using the same [SKILL.md](SKILL.md) checklist. We may have feedback — we hold a high quality bar. Once approved and merged, we'll publish the page to `docs.cartesia.ai/integrations/community/your-integration-name`.
 
 ## What belongs here
 
@@ -13,6 +19,16 @@ A community integration page shows developers how to use Cartesia **with** your 
 You're welcome to link to your product and docs — just don't turn the page into a sales pitch.
 
 This is **not** the place to re-document Cartesia's API, pitch your product, or write a tutorial that happens to mention Cartesia.
+
+## Requirements
+
+- One MDX file per integration, following `TEMPLATE.mdx` exactly
+- Tag which Cartesia product(s) your integration supports via `cartesia_product` in frontmatter (valid values: `tts`, `stt`, `line`)
+- All code examples must be complete and runnable (include imports)
+- Keep tone technical; avoid marketing adjectives and focus on factual integration guidance
+- Images/screenshots are allowed when used sparingly for setup clarity; store them at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`
+- Your PR should only add/modify files inside `submissions/` — do not modify repo files like README, TEMPLATE, SKILL, etc.
+- Read the [Style Guide](STYLE_GUIDE.md) before writing
 
 ## Maintenance policy
 
