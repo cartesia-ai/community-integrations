@@ -1,0 +1,324 @@
+---
+title: "Bandwidth + Cartesia"
+description: "Run a two-way voice agent on a Bandwidth phone call with Cartesia Ink speech-to-text and Sonic text-to-speech"
+last_verified: "2026-06-18"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Kush Shah"
+contributor_email: "kshah@bandwidth.com"
+contributor_url: "https://www.bandwidth.com"
+
+# Integration metadata
+cartesia_product: [tts, stt]
+developer: "Bandwidth"
+developer_website: "https://www.bandwidth.com"
+developer_docs: "https://dev.bandwidth.com"
+---
+
+<Check>Last verified: 2026-06-18</Check>
+
+## Overview
+
+Bridge a live phone call on [Bandwidth Programmable Voice](https://dev.bandwidth.com/docs/voice/) to Cartesia: transcribe the caller with [Ink](/build-with-cartesia/stt/latest) speech-to-text and reply with [Sonic](/build-with-cartesia/tts-models/latest) text-to-speech. A FastAPI server returns BXML, accepts Bandwidth's bidirectional media WebSocket, and forwards audio to and from Cartesia's STT and TTS sockets — no SDKs beyond `httpx`, `fastapi`, `uvicorn`, and `websockets`.
+
+Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mulaw` at 8000 Hz, so audio crosses the bridge byte-for-byte — no resampling in either direction.
+
+```
+        caller audio │                            │ reply audio
+   (media events) ▼  │                            │  ▲ (playAudio)
+   ┌───────────────────────────────────────────────────────────┐
+   │                     FastAPI bridge                          │
+   │   POST /bxml  ──► returns <StartStream>                     │
+   │   WS  /stream ◄─► Bandwidth media (base64 μ-law)            │
+   │        │  decode ──► Ink STT  (raw μ-law)  ── transcript ─┐ │
+   │        └◄── playAudio ◄── Sonic TTS ◄── reply text ◄──────┘ │
+   └───────────────────────────────────────────────────────────┘
+```
+
+## Prerequisites
+
+- A [Cartesia API key](https://play.cartesia.ai/keys) (looks like `sk_car_...`) and a voice ID from the [voice library](https://play.cartesia.ai/voices)
+- A [Bandwidth](https://dev.bandwidth.com/) account with Voice API OAuth credentials (`client_id` / `client_secret`), a purchased phone number, and a Voice Application
+- [`ngrok`](https://ngrok.com/) or any HTTPS tunnel that supports WebSockets
+- Python 3.11+
+
+## Quick start
+
+<Steps>
+  <Step title="Install the packages" titleSize="h3">
+    ```bash
+    python -m venv .venv && source .venv/bin/activate
+    pip install fastapi 'uvicorn[standard]' httpx websockets python-dotenv
+    ```
+  </Step>
+
+  <Step title="Set environment variables" titleSize="h3">
+    Create `.env`:
+
+    ```bash
+    BANDWIDTH_ACCOUNT_ID=your_account_id
+    BANDWIDTH_CLIENT_ID=your_oauth_client_id
+    BANDWIDTH_CLIENT_SECRET=your_oauth_client_secret
+    BANDWIDTH_APPLICATION_ID=your_voice_application_id
+    BANDWIDTH_FROM_NUMBER=+15555550100
+    BANDWIDTH_TO_NUMBER=+15555550199
+
+    CARTESIA_API_KEY=sk_car_your_key
+    CARTESIA_VOICE_ID=your_cartesia_voice_id
+
+    PUBLIC_URL=https://your-subdomain.ngrok.app
+    GREETING=Hi! Say something and I will read it back to you.
+    ```
+  </Step>
+
+  <Step title="Write the bridge server" titleSize="h3">
+    Create `server.py`. It answers Bandwidth's webhook with a `<StartStream>` verb, opens the media WebSocket, forwards caller audio to Ink, and speaks each finalized transcript back through Sonic.
+
+    ```python
+    import asyncio
+    import base64
+    import json
+    import os
+    import uuid
+    from contextlib import suppress
+
+    import httpx
+    import websockets
+    from dotenv import load_dotenv
+    from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+    from fastapi.responses import Response
+
+    load_dotenv()
+
+    PUBLIC_URL = os.environ["PUBLIC_URL"]
+    GREETING = os.environ["GREETING"]
+    CARTESIA_API_KEY = os.environ["CARTESIA_API_KEY"]
+    CARTESIA_VOICE_ID = os.environ["CARTESIA_VOICE_ID"]
+
+    # Cartesia pins its WebSocket protocol to a dated version string.
+    CARTESIA_VERSION = "2026-03-01"
+    TTS_URL = f"wss://api.cartesia.ai/tts/websocket?cartesia_version={CARTESIA_VERSION}"
+    # Ink reads the call's native 8 kHz mu-law directly, so caller audio needs no resampling.
+    STT_URL = (
+        "wss://api.cartesia.ai/stt/websocket"
+        f"?model=ink-2&cartesia_version={CARTESIA_VERSION}"
+        "&encoding=pcm_mulaw&sample_rate=8000&language=en"
+    )
+
+    BANDWIDTH_VOICE_BASE = "https://voice.bandwidth.com/api/v2"
+    BANDWIDTH_OAUTH_URL = "https://api.bandwidth.com/api/v1/oauth2/token"
+
+    app = FastAPI()
+
+
+    @app.post("/bxml")
+    async def bxml() -> Response:
+        # Bandwidth fetches this when the callee answers. <StartStream mode="bidirectional">
+        # opens the media WebSocket; the trailing <Pause> keeps the call alive while we talk.
+        ws_url = PUBLIC_URL.replace("https://", "wss://") + "/stream"
+        body = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            "<Response>"
+            f'<StartStream destination="{ws_url}" mode="bidirectional"/>'
+            '<Pause duration="600"/>'
+            "</Response>"
+        )
+        return Response(content=body, media_type="application/xml")
+
+
+    @app.websocket("/stream")
+    async def stream(ws: WebSocket) -> None:
+        await ws.accept()
+
+        # Bandwidth's first frame is a "start" event carrying the call IDs we need to hang up.
+        start_event = json.loads(await ws.receive_text())
+        if start_event.get("eventType") != "start":
+            await ws.close(code=4400)
+            return
+        metadata = start_event["metadata"]
+        account_id = metadata["accountId"]
+        call_id = metadata["callId"]
+
+        stt = await websockets.connect(STT_URL, additional_headers={"X-API-Key": CARTESIA_API_KEY})
+
+        await speak(ws, GREETING)
+        # One task pumps caller audio into Ink; the other speaks Ink's transcripts back.
+        pump = asyncio.create_task(_caller_audio_to_stt(ws, stt))
+        replies = asyncio.create_task(_transcripts_to_replies(ws, stt))
+
+        try:
+            await pump  # returns on Bandwidth's "stop" event or a disconnect
+        finally:
+            replies.cancel()
+            with suppress(asyncio.CancelledError):
+                await replies
+            await stt.close()
+            await _hang_up(account_id, call_id)
+
+
+    async def _caller_audio_to_stt(ws: WebSocket, stt) -> None:
+        # Bandwidth sends each media event as base64 mu-law in JSON; Ink wants raw
+        # binary, so decode before forwarding.
+        try:
+            async for raw in ws.iter_text():
+                event = json.loads(raw)
+                kind = event.get("eventType")
+                if kind == "media":
+                    await stt.send(base64.b64decode(event["payload"]))
+                elif kind == "stop":
+                    break
+        except WebSocketDisconnect:
+            pass
+        finally:
+            # Flush Ink's buffered audio and close its session cleanly.
+            with suppress(Exception):
+                await stt.send("finalize")
+                await stt.send("close")
+
+
+    async def _transcripts_to_replies(ws: WebSocket, stt) -> None:
+        async for raw in stt:
+            msg = json.loads(raw)
+            if msg.get("type") == "transcript" and msg.get("is_final") and msg.get("text"):
+                # Replace this echo with your own LLM / agent call to build a real bot.
+                await speak(ws, f"You said: {msg['text']}")
+            elif msg.get("type") == "error":
+                raise RuntimeError(f"Cartesia STT error: {msg}")
+
+
+    async def speak(ws: WebSocket, text: str) -> None:
+        # Open a Sonic socket, request synthesis, and forward each chunk to Bandwidth.
+        async with websockets.connect(TTS_URL, additional_headers={"X-API-Key": CARTESIA_API_KEY}) as tts:
+            await tts.send(json.dumps({
+                "context_id": str(uuid.uuid4()),  # required; groups one synthesis request
+                "model_id": "sonic-3.5",
+                "voice": {"mode": "id", "id": CARTESIA_VOICE_ID},
+                "transcript": text,
+                "output_format": {"container": "raw", "encoding": "pcm_mulaw", "sample_rate": 8000},
+            }))
+            async for raw in tts:
+                msg = json.loads(raw)
+                if msg.get("type") == "chunk":
+                    # Sonic's mu-law bytes are wire-compatible with Bandwidth's audio/pcmu.
+                    await ws.send_text(json.dumps({
+                        "eventType": "playAudio",
+                        "media": {"contentType": "audio/pcmu", "payload": msg["data"]},
+                    }))
+                elif msg.get("type") == "done":
+                    return
+                elif msg.get("type") == "error":
+                    raise RuntimeError(f"Cartesia TTS error: {msg}")
+
+
+    async def _bandwidth_token(client: httpx.AsyncClient) -> str:
+        resp = await client.post(
+            BANDWIDTH_OAUTH_URL,
+            auth=(os.environ["BANDWIDTH_CLIENT_ID"], os.environ["BANDWIDTH_CLIENT_SECRET"]),
+            data={"grant_type": "client_credentials"},
+        )
+        resp.raise_for_status()
+        return resp.json()["access_token"]
+
+
+    async def _hang_up(account_id: str, call_id: str) -> None:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            token = await _bandwidth_token(client)
+            resp = await client.post(
+                f"{BANDWIDTH_VOICE_BASE}/accounts/{account_id}/calls/{call_id}",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"state": "completed"},
+            )
+            if resp.status_code not in (200, 404):  # 404 = call already ended
+                resp.raise_for_status()
+    ```
+  </Step>
+
+  <Step title="Run the server and expose it" titleSize="h3">
+    ```bash
+    uvicorn server:app --host 0.0.0.0 --port 8000
+    # in a second terminal:
+    ngrok http 8000
+    ```
+
+    Copy ngrok's HTTPS URL into `.env` as `PUBLIC_URL` and restart the server.
+  </Step>
+
+  <Step title="Point the Voice Application at the bridge" titleSize="h3">
+    In the Bandwidth dashboard, edit your Voice Application and set its **Inbound Voice URL** to `https://your-subdomain.ngrok.app/bxml`. The Voice Application must be valid even for outbound calls; the URL used per call is set as `answerUrl` in the next step.
+  </Step>
+
+  <Step title="Place the call" titleSize="h3">
+    Create `outbound.py` and run it with `python outbound.py`. Your phone rings; answer, talk, and the bot reads your words back.
+
+    ```python
+    import asyncio
+    import os
+
+    import httpx
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+
+    async def main() -> None:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            token_resp = await client.post(
+                "https://api.bandwidth.com/api/v1/oauth2/token",
+                auth=(os.environ["BANDWIDTH_CLIENT_ID"], os.environ["BANDWIDTH_CLIENT_SECRET"]),
+                data={"grant_type": "client_credentials"},
+            )
+            token_resp.raise_for_status()
+            access_token = token_resp.json()["access_token"]
+
+            account_id = os.environ["BANDWIDTH_ACCOUNT_ID"]
+            call_resp = await client.post(
+                f"https://voice.bandwidth.com/api/v2/accounts/{account_id}/calls",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={  # field names are camelCase per Bandwidth's Voice API
+                    "to": os.environ["BANDWIDTH_TO_NUMBER"],
+                    "from": os.environ["BANDWIDTH_FROM_NUMBER"],
+                    "applicationId": os.environ["BANDWIDTH_APPLICATION_ID"],
+                    "answerUrl": f"{os.environ['PUBLIC_URL']}/bxml",
+                    "answerMethod": "POST",
+                },
+            )
+            call_resp.raise_for_status()
+            print("Call queued:", call_resp.json()["callId"])
+
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+  </Step>
+</Steps>
+
+## Configuration
+
+The Cartesia-facing knobs live in the generation request and the STT URL:
+
+| Parameter | Where | Value used | Notes |
+| --- | --- | --- | --- |
+| `model_id` | TTS request | `sonic-3.5` | Pin a [dated Sonic snapshot](/build-with-cartesia/tts-models/latest) (e.g. `sonic-3.5-2026-05-04`) for production stability |
+| `voice` | TTS request | `{"mode":"id","id":...}` | Any voice ID from the [voice library](https://play.cartesia.ai/voices) |
+| `output_format` | TTS request | `pcm_mulaw` @ `8000` | Matches Bandwidth's `audio/pcmu`; no conversion needed |
+| `model` | STT URL | `ink-2` | Cartesia's latest streaming STT model |
+| `encoding` / `sample_rate` | STT URL | `pcm_mulaw` / `8000` | Matches the call's native format |
+
+## What's next
+
+- **Plug in an LLM.** The echo in `_transcripts_to_replies` is the seam — route each finalized transcript through your own agent and synthesize its reply with the same `speak` call.
+- **Cleaner turn-taking.** The manual STT socket emits incremental `is_final` segments, so this demo replies per fragment. Switch to the [turn-detection endpoint](/api-reference/stt/websocket) (`/stt/turns/websocket`) to reply once per completed utterance.
+- **Higher-fidelity TTS.** Bandwidth's `playAudio` also accepts `audio/pcm;rate=16000` and `rate=24000` (mono, 16-bit, little-endian). Set Sonic's `output_format` to `pcm_s16le` at the matching rate; Bandwidth resamples to 8 kHz μ-law once at its edge instead of after a lossy round-trip.
+- **Barge-in.** Send `{"eventType": "clear"}` on the media WebSocket to drop queued outbound audio when the caller talks over the bot.
+- **Use a framework.** [`pipecat-bandwidth`](https://github.com/Bandwidth/pipecat-bandwidth) wraps this protocol as a Pipecat `FrameSerializer` with the STT/LLM/TTS plumbing built in.
+- **Harden it.** Validate Bandwidth's webhook signatures and attach Basic auth to the WebSocket via `<StartStream destinationUsername="..." destinationPassword="...">`.
+
+## Resources
+
+- [Bandwidth `StartStream` (BXML)](https://dev.bandwidth.com/docs/voice/bxml/startStream/)
+- [Bandwidth Voice API](https://dev.bandwidth.com/docs/voice/)
+- [Cartesia TTS WebSocket reference](/api-reference/tts/websocket)
+- [Cartesia STT WebSocket reference](/api-reference/stt/websocket)
+- [Sonic TTS models](/build-with-cartesia/tts-models/latest)
+- [Ink STT models](/build-with-cartesia/stt/latest)
+- [`pipecat-bandwidth`](https://github.com/Bandwidth/pipecat-bandwidth)
