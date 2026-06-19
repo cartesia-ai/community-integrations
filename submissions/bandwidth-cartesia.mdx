@@ -307,7 +307,7 @@ The Cartesia-facing knobs live in the generation request and the STT URL:
 ## What's next
 
 - **Plug in an LLM.** The echo in `_transcripts_to_replies` is the seam — route each finalized transcript through your own agent and synthesize its reply with the same `speak` call.
-- **Cleaner turn-taking.** The manual STT socket emits incremental `is_final` segments, so this demo replies per fragment. Switch to the [turn-detection endpoint](/api-reference/stt/websocket) (`/stt/turns/websocket`) to reply once per completed utterance.
+- **Cleaner turn-taking.** The manual STT socket emits incremental `is_final` segments, so this demo replies per fragment. Switch to the [turn-detection endpoint](/api-reference/stt/turns/websocket) (`/stt/turns/websocket`) to reply once per completed utterance.
 - **Higher-fidelity TTS.** Bandwidth's `playAudio` also accepts `audio/pcm;rate=16000` and `rate=24000` (mono, 16-bit, little-endian). Set Sonic's `output_format` to `pcm_s16le` at the matching rate; Bandwidth resamples to 8 kHz μ-law once at its edge instead of after a lossy round-trip.
 - **Barge-in.** Send `{"eventType": "clear"}` on the media WebSocket to drop queued outbound audio when the caller talks over the bot.
 - **Use a framework.** [`pipecat-bandwidth`](https://github.com/Bandwidth/pipecat-bandwidth) wraps this protocol as a Pipecat `FrameSerializer` with the STT/LLM/TTS plumbing built in.
