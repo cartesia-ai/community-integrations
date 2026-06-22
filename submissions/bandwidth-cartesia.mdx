@@ -1,6 +1,6 @@
 ---
 title: "Bandwidth + Cartesia"
-description: "Run a two-way voice agent on a Bandwidth phone call with Cartesia Ink speech-to-text and Sonic text-to-speech"
+description: "Run a two-way voice agent on a Bandwidth phone call with Cartesia Ink 2 speech-to-text and Sonic text-to-speech"
 last_verified: "2026-06-18"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -19,7 +19,7 @@ developer_docs: "https://dev.bandwidth.com"
 
 ## Overview
 
-Bridge a live phone call on [Bandwidth Programmable Voice](https://dev.bandwidth.com/docs/voice/) to Cartesia: transcribe the caller with [Ink](/build-with-cartesia/stt/latest) speech-to-text and reply with [Sonic](/build-with-cartesia/tts-models/latest) text-to-speech. A FastAPI server returns BXML, accepts Bandwidth's bidirectional media WebSocket, and forwards audio to and from Cartesia's STT and TTS sockets — no SDKs beyond `httpx`, `fastapi`, `uvicorn`, and `websockets`.
+Bridge a live phone call on [Bandwidth Programmable Voice](https://dev.bandwidth.com/docs/voice/) to Cartesia: transcribe the caller with [Ink 2](/build-with-cartesia/stt/latest) speech-to-text and reply with [Sonic](/build-with-cartesia/tts-models/latest) text-to-speech. A FastAPI server returns BXML, accepts Bandwidth's bidirectional media WebSocket, and forwards audio to and from Cartesia's STT and TTS sockets — no SDKs beyond `httpx`, `fastapi`, `uvicorn`, and `websockets`.
 
 Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mulaw` at 8000 Hz, so audio crosses the bridge byte-for-byte — no resampling in either direction.
 
@@ -30,7 +30,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
    │                     FastAPI bridge                          │
    │   POST /bxml  ──► returns <StartStream>                     │
    │   WS  /stream ◄─► Bandwidth media (base64 μ-law)            │
-   │        │  decode ──► Ink STT  (raw μ-law)  ── transcript ─┐ │
+   │        │  decode ──► Ink 2 STT (raw μ-law)  ── transcript ─┐ │
    │        └◄── playAudio ◄── Sonic TTS ◄── reply text ◄──────┘ │
    └───────────────────────────────────────────────────────────┘
 ```
@@ -72,7 +72,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
   </Step>
 
   <Step title="Write the bridge server" titleSize="h3">
-    Create `server.py`. It answers Bandwidth's webhook with a `<StartStream>` verb, opens the media WebSocket, forwards caller audio to Ink, and speaks each finalized transcript back through Sonic.
+    Create `server.py`. It answers Bandwidth's webhook with a `<StartStream>` verb, opens the media WebSocket, forwards caller audio to Ink 2, and speaks each finalized transcript back through Sonic.
 
     ```python
     import asyncio
@@ -98,7 +98,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
     # Cartesia pins its WebSocket protocol to a dated version string.
     CARTESIA_VERSION = "2026-03-01"
     TTS_URL = f"wss://api.cartesia.ai/tts/websocket?cartesia_version={CARTESIA_VERSION}"
-    # Ink reads the call's native 8 kHz mu-law directly, so caller audio needs no resampling.
+    # Ink 2 reads the call's native 8 kHz mu-law directly, so caller audio needs no resampling.
     STT_URL = (
         "wss://api.cartesia.ai/stt/websocket"
         f"?model=ink-2&cartesia_version={CARTESIA_VERSION}"
@@ -142,7 +142,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
         stt = await websockets.connect(STT_URL, additional_headers={"X-API-Key": CARTESIA_API_KEY})
 
         await speak(ws, GREETING)
-        # One task pumps caller audio into Ink; the other speaks Ink's transcripts back.
+        # One task pumps caller audio into Ink 2; the other speaks its transcripts back.
         pump = asyncio.create_task(_caller_audio_to_stt(ws, stt))
         replies = asyncio.create_task(_transcripts_to_replies(ws, stt))
 
@@ -157,7 +157,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
 
 
     async def _caller_audio_to_stt(ws: WebSocket, stt) -> None:
-        # Bandwidth sends each media event as base64 mu-law in JSON; Ink wants raw
+        # Bandwidth sends each media event as base64 mu-law in JSON; Ink 2 wants raw
         # binary, so decode before forwarding.
         try:
             async for raw in ws.iter_text():
@@ -170,7 +170,7 @@ Bandwidth carries calls as 8 kHz μ-law, and both Cartesia sockets speak `pcm_mu
         except WebSocketDisconnect:
             pass
         finally:
-            # Flush Ink's buffered audio and close its session cleanly.
+            # Flush Ink 2's buffered audio and close its session cleanly.
             with suppress(Exception):
                 await stt.send("finalize")
                 await stt.send("close")
@@ -320,5 +320,5 @@ The Cartesia-facing knobs live in the generation request and the STT URL:
 - [Cartesia TTS WebSocket reference](/api-reference/tts/websocket)
 - [Cartesia STT WebSocket reference](/api-reference/stt/websocket)
 - [Sonic TTS models](/build-with-cartesia/tts-models/latest)
-- [Ink STT models](/build-with-cartesia/stt/latest)
+- [Ink 2 STT](/build-with-cartesia/stt/latest)
 - [`pipecat-bandwidth`](https://github.com/Bandwidth/pipecat-bandwidth)
