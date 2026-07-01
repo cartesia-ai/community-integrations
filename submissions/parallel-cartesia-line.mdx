@@ -19,7 +19,7 @@ developer_docs: "https://docs.parallel.ai/search/search-quickstart"
 
 ## Overview
 
-Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). The agent retrieves current web results during the voice turn and answers directly in short spoken sentences.
+Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). This example uses `mode="turbo"` for a foreground voice turn, where the agent needs current web context before answering in short spoken sentences.
 
 ## Prerequisites
 
@@ -137,6 +137,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
             try:
                 search = await client.search(
                     search_queries=[query],
+                    # Turbo mode is optimized for the fastest responses, which fits live voice turns.
                     mode="turbo",
                     max_chars_total=MAX_CHARS_TOTAL,
                     advanced_settings={"max_results": MAX_RESULTS},
@@ -181,18 +182,20 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     cartesia chat 8000
     ```
 
-    The agent greets you, runs `web_search` for current-information questions, and answers in two to four spoken sentences without reading citations or URLs aloud.
+    The agent greets you, runs `web_search` with `mode="turbo"` for current-information questions, and answers in two to four spoken sentences without reading citations or URLs aloud.
   </Step>
 
   <Step title="Ask a current-information question" titleSize="h3">
     ```text
-    What did Parallel Web Systems announce about compensating content owners with Index?
+    What is the latest news about Parallel Web Systems compensating content owners?
     ```
   </Step>
 </Steps>
 
 
 ## Configuration
+
+The defaults keep search results and excerpts compact so the agent gets enough context for a spoken answer without turning the call into a deeper research workflow.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
