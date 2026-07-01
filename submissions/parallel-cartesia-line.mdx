@@ -19,7 +19,7 @@ developer_docs: "https://docs.parallel.ai/search/search-quickstart"
 
 ## Overview
 
-Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). This example uses `mode="turbo"` for a foreground voice turn, where the agent needs current web context before answering in short spoken sentences.
+Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). This example uses `mode="turbo"`, Parallel's lowest-latency Search mode, for a foreground voice turn where the agent needs current web context before answering in short spoken sentences.
 
 ## Prerequisites
 
@@ -65,9 +65,9 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     from parallel import AsyncParallel
 
 
-    MAX_RESULTS = int(os.getenv("PARALLEL_MAX_RESULTS", "3"))
-    MAX_CHARS_TOTAL = int(os.getenv("PARALLEL_MAX_CHARS_TOTAL", "1800"))
+    MAX_RESULTS = int(os.getenv("PARALLEL_MAX_RESULTS", "5"))
     MAX_EXCERPT_CHARS = int(os.getenv("PARALLEL_MAX_EXCERPT_CHARS", "360"))
+    MAX_CHARS_TOTAL = int(os.getenv("PARALLEL_MAX_CHARS_TOTAL", str(MAX_RESULTS * MAX_EXCERPT_CHARS)))
 
     SYSTEM_PROMPT = """You answer questions on a live voice call.
 
@@ -187,7 +187,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
   <Step title="Ask a current-information question" titleSize="h3">
     ```text
-    What is the latest news about Parallel Web Systems compensating content owners?
+    What's the weather in San Francisco right now?
     ```
   </Step>
 </Steps>
@@ -195,13 +195,13 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
 ## Configuration
 
-The defaults keep search results and excerpts compact so the agent gets enough context for a spoken answer without turning the call into a deeper research workflow.
+The defaults keep search results and excerpts compact so the agent gets enough context for a spoken answer without turning the call into a deeper research workflow. By default, five results at 360 characters each match the 1,800-character Parallel Search budget.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `PARALLEL_MAX_RESULTS` | `int` | `3` | Maximum number of search results returned to the LLM. |
-| `PARALLEL_MAX_CHARS_TOTAL` | `int` | `1800` | Character budget for search excerpts across all results. |
+| `PARALLEL_MAX_RESULTS` | `int` | `5` | Maximum number of search results returned to the LLM. |
 | `PARALLEL_MAX_EXCERPT_CHARS` | `int` | `360` | Character budget for each excerpt passed to the voice agent. |
+| `PARALLEL_MAX_CHARS_TOTAL` | `int` | `MAX_RESULTS * PARALLEL_MAX_EXCERPT_CHARS` (`1800` by default) | Character budget for search excerpts across all results. |
 | `LINE_MODEL` | `string` | `"openai/gpt-4o-mini"` | LLM used by the Cartesia Line agent. |
 
 ## Resources
