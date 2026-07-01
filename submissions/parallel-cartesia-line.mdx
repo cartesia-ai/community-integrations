@@ -132,10 +132,6 @@ def build_web_search_tool(api_key: str):
 
         try:
             search = await client.search(
-                objective=(
-                    f"Answer this question with current web sources: {query}. "
-                    "Prefer official pages, press releases, and primary sources when available."
-                ),
                 search_queries=[query],
                 mode="turbo",
                 max_chars_total=MAX_CHARS_TOTAL,
