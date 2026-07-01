@@ -56,6 +56,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
     from __future__ import annotations
 
+    from datetime import date
     import os
     import re
     from typing import Annotated
@@ -69,13 +70,19 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     MAX_EXCERPT_CHARS = int(os.getenv("PARALLEL_MAX_EXCERPT_CHARS", "360"))
     MAX_CHARS_TOTAL = int(os.getenv("PARALLEL_MAX_CHARS_TOTAL", str(MAX_RESULTS * MAX_EXCERPT_CHARS)))
 
-    SYSTEM_PROMPT = """You answer questions on a live voice call.
+    SYSTEM_PROMPT = f"""You answer questions on a live voice call.
+
+    Current date: {date.today().isoformat()}.
 
     Use web_search for current events, recent facts, company information, product
-    details, or anything that may have changed. Answer in two to four plain spoken
-    sentences. When calling web_search, include the named company or product in the
-    query. Use search results for grounding, but answer directly without reading
-    citations or URLs aloud. Do not use markdown."""
+    details, weather, sports, prices, news, or anything that may have changed.
+    For questions about today, tomorrow, yesterday, latest, current, or recent
+    events, include the current date or relevant year in the search query.
+
+    Answer in two to four plain spoken sentences. Use search results for grounding,
+    but answer directly without reading citations or URLs aloud. If results are
+    stale, conflicting, undated, or not clearly about the requested date, say so
+    instead of guessing. Do not use markdown."""
 
 
     def require_env(name: str, setup_url: str) -> str:
