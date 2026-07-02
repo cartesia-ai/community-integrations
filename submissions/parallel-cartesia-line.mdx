@@ -26,7 +26,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 - Python 3.10+
 - A Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
 - A Parallel API key (`PARALLEL_API_KEY`) from [Parallel Platform](https://platform.parallel.ai)
-- An LLM provider key — `OPENAI_API_KEY` for the default model, or `LINE_API_KEY` when `LINE_MODEL` uses another provider
+- An LLM provider key — `OPENAI_API_KEY` for the default model, `CEREBRAS_API_KEY` for the optional Cerebras model, or `LLM_API_KEY` for another LiteLLM provider
 - The Cartesia CLI for local chat testing ([Line quickstart](/line/start-building/quickstart))
 
 ## Quick start
@@ -46,9 +46,9 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     export PARALLEL_API_KEY="..."
     export OPENAI_API_KEY="..."
 
-    # Optional: use another LiteLLM-supported provider.
+    # Optional: use Cerebras through LiteLLM.
     # export LINE_MODEL="cerebras/gpt-oss-120b"
-    # export LINE_API_KEY="..."
+    # export CEREBRAS_API_KEY="..."
     ```
   </Step>
 
@@ -70,6 +70,8 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     from parallel import AsyncParallel
 
 
+    DEFAULT_LINE_MODEL = "openai/gpt-4o-mini"
+    LINE_MAX_TOKENS = int(os.getenv("LINE_MAX_TOKENS", "220"))
     MAX_RESULTS = int(os.getenv("PARALLEL_MAX_RESULTS", "5"))
     MAX_EXCERPT_CHARS = int(os.getenv("PARALLEL_MAX_EXCERPT_CHARS", "360"))
     MAX_CHARS_TOTAL = int(os.getenv("PARALLEL_MAX_CHARS_TOTAL", str(MAX_RESULTS * MAX_EXCERPT_CHARS)))
@@ -84,7 +86,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     Call web_search silently: do not say "let me look that up", "one moment", or
     any other filler before or while searching. Wait for results, then answer directly.
 
-    Answer from the results in two to four sentences. If results are stale,
+    Answer from the results in one to three short sentences. If results are stale,
     conflicting, undated, or not clearly about the requested date, say so instead
     of guessing."""
 
@@ -97,14 +99,17 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
 
     def llm_api_key(model: str) -> str:
-        override = os.environ.get("LINE_API_KEY", "").strip()
-        if override:
-            return override
+        if model.startswith("cerebras/"):
+            return require_env("CEREBRAS_API_KEY", "https://cloud.cerebras.ai")
         if model.startswith("openai/") or "/" not in model:
             return require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys")
+
+        override = os.environ.get("LLM_API_KEY", "").strip()
+        if override:
+            return override
         raise RuntimeError(
-            "LINE_API_KEY is not set. Set it to the API key for LINE_MODEL, "
-            "or use the default OpenAI model with OPENAI_API_KEY."
+            "LLM_API_KEY is not set. Set it to the provider key for LINE_MODEL, "
+            "or use OPENAI_API_KEY for OpenAI or CEREBRAS_API_KEY for Cerebras."
         )
 
 
@@ -177,7 +182,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
         web_search = build_web_search_tool(
             api_key=require_env("PARALLEL_API_KEY", "https://platform.parallel.ai")
         )
-        line_model = os.getenv("LINE_MODEL", "openai/gpt-4o-mini")
+        line_model = (os.getenv("LINE_MODEL") or DEFAULT_LINE_MODEL).strip() or DEFAULT_LINE_MODEL
 
         return LlmAgent(
             model=line_model,
@@ -186,7 +191,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
             config=LlmConfig(
                 system_prompt=SYSTEM_PROMPT,
                 introduction="Hello. Ask me a question that needs a web search.",
-                max_tokens=500,
+                max_tokens=LINE_MAX_TOKENS,
                 temperature=0.3,
             ),
         )
@@ -206,7 +211,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     cartesia chat 8000
     ```
 
-    The agent greets you, calls `web_search` silently with `mode="turbo"` for current-information questions, and answers in two to four spoken sentences without reading citations or URLs aloud.
+    The agent greets you, calls `web_search` silently with `mode="turbo"` for current-information questions, and answers in one to three short spoken sentences without reading citations or URLs aloud.
   </Step>
 
   <Step title="Ask a current-information question" titleSize="h3">
@@ -227,7 +232,8 @@ The defaults keep search results and excerpts compact so the agent gets enough c
 | `PARALLEL_MAX_EXCERPT_CHARS` | `int` | `360` | Character budget for each excerpt passed to the voice agent. |
 | `PARALLEL_MAX_CHARS_TOTAL` | `int` | `MAX_RESULTS * PARALLEL_MAX_EXCERPT_CHARS` (`1800` by default) | Character budget for search excerpts across all results. |
 | `LINE_MODEL` | `string` | `"openai/gpt-4o-mini"` | LLM used by the Cartesia Line agent. |
-| `LINE_API_KEY` | `string` | unset | Optional override for the `LINE_MODEL` provider key. If unset, OpenAI models use `OPENAI_API_KEY`. |
+| `LINE_MAX_TOKENS` | `int` | `220` | Maximum LLM output tokens for each spoken answer. |
+| `LLM_API_KEY` | `string` | unset | Optional provider key for `LINE_MODEL` values outside the OpenAI and Cerebras prefixes. |
 
 ## Resources
 
