@@ -26,7 +26,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 - Python 3.10+
 - A Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
 - A Parallel API key (`PARALLEL_API_KEY`) from [Parallel Platform](https://platform.parallel.ai)
-- An LLM provider key — `OPENAI_API_KEY` for the example below
+- An LLM provider key — `OPENAI_API_KEY` for the default model, or `LINE_API_KEY` when `LINE_MODEL` uses another provider
 - The Cartesia CLI for local chat testing ([Line quickstart](/line/start-building/quickstart))
 
 ## Quick start
@@ -45,6 +45,10 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     export CARTESIA_API_KEY="..."
     export PARALLEL_API_KEY="..."
     export OPENAI_API_KEY="..."
+
+    # Optional: use another LiteLLM-supported provider.
+    # export LINE_MODEL="cerebras/gpt-oss-120b"
+    # export LINE_API_KEY="..."
     ```
   </Step>
 
@@ -77,6 +81,8 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
     Use web_search for current, recent, or potentially changed facts, and whenever
     you are not certain. Add the current date or year to time-sensitive queries.
+    Call web_search silently: do not say "let me look that up", "one moment", or
+    any other filler before or while searching. Wait for results, then answer directly.
 
     Answer from the results in two to four sentences. If results are stale,
     conflicting, undated, or not clearly about the requested date, say so instead
@@ -88,6 +94,18 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
         if not value:
             raise RuntimeError(f"{name} is not set. Get one at {setup_url} and export it.")
         return value
+
+
+    def llm_api_key(model: str) -> str:
+        override = os.environ.get("LINE_API_KEY", "").strip()
+        if override:
+            return override
+        if model.startswith("openai/") or "/" not in model:
+            return require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys")
+        raise RuntimeError(
+            "LINE_API_KEY is not set. Set it to the API key for LINE_MODEL, "
+            "or use the default OpenAI model with OPENAI_API_KEY."
+        )
 
 
     def squash(text: str, limit: int) -> str:
@@ -159,10 +177,11 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
         web_search = build_web_search_tool(
             api_key=require_env("PARALLEL_API_KEY", "https://platform.parallel.ai")
         )
+        line_model = os.getenv("LINE_MODEL", "openai/gpt-4o-mini")
 
         return LlmAgent(
-            model=os.getenv("LINE_MODEL", "openai/gpt-4o-mini"),
-            api_key=require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys"),
+            model=line_model,
+            api_key=llm_api_key(line_model),
             tools=[web_search, end_call],
             config=LlmConfig(
                 system_prompt=SYSTEM_PROMPT,
@@ -187,7 +206,7 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     cartesia chat 8000
     ```
 
-    The agent greets you, runs `web_search` with `mode="turbo"` for current-information questions, and answers in two to four spoken sentences without reading citations or URLs aloud.
+    The agent greets you, calls `web_search` silently with `mode="turbo"` for current-information questions, and answers in two to four spoken sentences without reading citations or URLs aloud.
   </Step>
 
   <Step title="Ask a current-information question" titleSize="h3">
@@ -208,6 +227,7 @@ The defaults keep search results and excerpts compact so the agent gets enough c
 | `PARALLEL_MAX_EXCERPT_CHARS` | `int` | `360` | Character budget for each excerpt passed to the voice agent. |
 | `PARALLEL_MAX_CHARS_TOTAL` | `int` | `MAX_RESULTS * PARALLEL_MAX_EXCERPT_CHARS` (`1800` by default) | Character budget for search excerpts across all results. |
 | `LINE_MODEL` | `string` | `"openai/gpt-4o-mini"` | LLM used by the Cartesia Line agent. |
+| `LINE_API_KEY` | `string` | unset | Optional override for the `LINE_MODEL` provider key. If unset, OpenAI models use `OPENAI_API_KEY`. |
 
 ## Resources
 
