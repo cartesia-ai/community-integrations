@@ -1,7 +1,7 @@
 ---
 title: "Parallel Search + Cartesia Line"
 description: "Add Parallel Search to a Cartesia Line voice agent"
-last_verified: "2026-07-07"
+last_verified: "2026-07-15"
 
 # Contributor info (used for re-verification outreach and attribution)
 contributor: "Parallel Web Systems"
@@ -15,18 +15,18 @@ developer_website: "https://parallel.ai"
 developer_docs: "https://docs.parallel.ai/search/search-quickstart"
 ---
 
-<Check>Last verified: 2026-07-07</Check>
+<Check>Last verified: 2026-07-15</Check>
 
 ## Overview
 
-Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). This example uses `mode="turbo"`, Parallel's lowest-latency Search mode, for a foreground voice turn where the agent needs current web context before answering in short spoken sentences. Voice latency comes from the whole turn: Turbo keeps retrieval fast, compact excerpts reduce the LLM's read time, and short answers reduce spoken response time.
+Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [loopback tool](/line/sdk/tools) in a [Cartesia Line agent](/line/sdk/agents). This example uses `mode="turbo"` and compact search excerpts to keep live voice turns short when the agent needs current web context.
 
 ## Prerequisites
 
 - Python 3.10+
 - A Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
 - A Parallel API key (`PARALLEL_API_KEY`) from [Parallel Platform](https://platform.parallel.ai)
-- An LLM provider key — `OPENAI_API_KEY` for the default model, `CEREBRAS_API_KEY` for the optional Cerebras model, or `LLM_API_KEY` for another LiteLLM provider
+- An OpenAI API key (`OPENAI_API_KEY`) from [OpenAI API keys](https://platform.openai.com/api-keys)
 - The Cartesia CLI for local chat testing ([Line quickstart](/line/start-building/quickstart))
 
 ## Quick start
@@ -45,10 +45,6 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     export CARTESIA_API_KEY="..."
     export PARALLEL_API_KEY="..."
     export OPENAI_API_KEY="..."
-
-    # Optional: use Cerebras through LiteLLM.
-    # export LINE_MODEL="cerebras/gpt-oss-120b"
-    # export CEREBRAS_API_KEY="..."
     ```
   </Step>
 
@@ -70,7 +66,6 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
     from parallel import AsyncParallel
 
 
-    DEFAULT_LINE_MODEL = "openai/gpt-4o-mini"
     LINE_MAX_TOKENS = int(os.getenv("LINE_MAX_TOKENS", "180"))
     MAX_RESULTS = int(os.getenv("PARALLEL_MAX_RESULTS", "3"))
     MAX_EXCERPT_CHARS = int(os.getenv("PARALLEL_MAX_EXCERPT_CHARS", "240"))
@@ -97,37 +92,6 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
         if not value:
             raise RuntimeError(f"{name} is not set. Get one at {setup_url} and export it.")
         return value
-
-
-    def current_line_model() -> str:
-        return (os.getenv("LINE_MODEL") or DEFAULT_LINE_MODEL).strip() or DEFAULT_LINE_MODEL
-
-
-    def llm_api_key(model: str) -> str:
-        if model.startswith("cerebras/"):
-            return require_env("CEREBRAS_API_KEY", "https://cloud.cerebras.ai")
-        if model.startswith("openai/") or "/" not in model:
-            return require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys")
-
-        override = os.environ.get("LLM_API_KEY", "").strip()
-        if override:
-            return override
-        raise RuntimeError(
-            "LLM_API_KEY is not set. Set it to the provider key for LINE_MODEL, "
-            "or use OPENAI_API_KEY for OpenAI or CEREBRAS_API_KEY for Cerebras."
-        )
-
-
-    def llm_config(model: str) -> LlmConfig:
-        kwargs = {
-            "system_prompt": system_prompt(),
-            "introduction": "Hello. Ask me a question that needs a web search.",
-            "max_tokens": LINE_MAX_TOKENS,
-            "temperature": 0.3,
-        }
-        if model.startswith("cerebras/"):
-            kwargs["reasoning_effort"] = "low"
-        return LlmConfig(**kwargs)
 
 
     def squash(text: str, limit: int) -> str:
@@ -200,13 +164,17 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
         web_search = build_web_search_tool(
             api_key=require_env("PARALLEL_API_KEY", "https://platform.parallel.ai")
         )
-        line_model = current_line_model()
 
         return LlmAgent(
-            model=line_model,
-            api_key=llm_api_key(line_model),
+            model="openai/gpt-4o-mini",
+            api_key=require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys"),
             tools=[web_search, end_call],
-            config=llm_config(line_model),
+            config=LlmConfig(
+                system_prompt=system_prompt(),
+                introduction="Hello. Ask me a question that needs a web search.",
+                max_tokens=LINE_MAX_TOKENS,
+                temperature=0.3,
+            ),
         )
 
 
@@ -237,16 +205,14 @@ Use [Parallel Search](https://docs.parallel.ai/search/search-quickstart) as a [l
 
 ## Configuration
 
-The defaults keep search results and excerpts compact so the agent gets enough context for a spoken answer without turning the call into a deeper research workflow. By default, three results at 240 characters each match the 720-character Parallel Search budget. This keeps the search payload small enough for a live voice turn while still giving the LLM multiple current snippets to synthesize. Cerebras models use `reasoning_effort="low"` for compatibility with `gpt-oss-120b` and lower latency.
+The defaults keep search results and excerpts compact so the agent gets enough context for a spoken answer without turning the call into a deeper research workflow. By default, three results at 240 characters each match the 720-character Parallel Search budget. This keeps the search payload small enough for a live voice turn while still giving the LLM multiple current snippets to synthesize.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
 | `PARALLEL_MAX_RESULTS` | `int` | `3` | Maximum number of search results returned to the LLM. |
 | `PARALLEL_MAX_EXCERPT_CHARS` | `int` | `240` | Character budget for each excerpt passed to the voice agent. |
 | `PARALLEL_MAX_CHARS_TOTAL` | `int` | `MAX_RESULTS * PARALLEL_MAX_EXCERPT_CHARS` (`720` by default) | Character budget for search excerpts across all results. |
-| `LINE_MODEL` | `string` | `"openai/gpt-4o-mini"` | LLM used by the Cartesia Line agent. |
 | `LINE_MAX_TOKENS` | `int` | `180` | Maximum LLM output tokens for each spoken answer. |
-| `LLM_API_KEY` | `string` | unset | Optional provider key for `LINE_MODEL` values outside the OpenAI and Cerebras prefixes. |
 
 For demos or production checks, log the search leg separately from the full voice turn. Useful fields include Parallel Search latency, total tool duration, result count, and the formatted payload size. Keep that instrumentation outside the minimal agent unless you need it; the core integration only requires the loopback tool above.
 
