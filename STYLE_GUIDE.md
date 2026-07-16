@@ -43,6 +43,8 @@ Every code example must be **complete and runnable**:
 - If a code sample depends on an HTML element or setup snippet, show that snippet first
 - If a snippet uses top-level `await` or other runtime-specific syntax, add a one-line note about the requirement (e.g., ES module, async wrapper)
 
+For long runnable examples, lead with the core integration path. Put the main Cartesia call, contributor SDK call, tool, agent wiring, or client handoff before helper functions, formatting logic, validation, and production hardening when the language allows it. Keep the Quick start quick to scan while keeping the example complete and runnable.
+
 ```python
 # Good
 from cartesia import Cartesia
