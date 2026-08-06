@@ -1,0 +1,181 @@
+---
+title: "LiveAvatar + Cartesia Line"
+description: "Give a deployed Cartesia Line agent a streaming avatar with the LiveAvatar Cartesia Agent Connector"
+last_verified: "2026-08-05"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "LiveAvatar"
+contributor_email: "dyi@heygen.com"
+contributor_url: "https://liveavatar.com"
+
+# Integration metadata
+cartesia_product: [line]
+developer: "LiveAvatar"
+developer_website: "https://liveavatar.com"
+developer_docs: "https://docs.liveavatar.com"
+---
+
+<Check>Last verified: 2026-08-05</Check>
+
+## Overview
+
+Use this integration to put a streaming [LiveAvatar](https://docs.liveavatar.com) avatar in front of a deployed [Cartesia Line agent](/line/sdk/agents). Your Line agent owns the prompt, tools, voice, and turn-taking; LiveAvatar's [Cartesia Agent Connector](https://docs.liveavatar.com/docs/lite-mode/connectors/cartesia-agent) runs the bridge and renders lip-synced video from the agent's audio.
+
+You pass an `agent_id` and a stored Cartesia API key when creating the session — no audio pipeline of your own.
+
+## Prerequisites
+
+- Cartesia Line agent deployed with an `agent_id` ([Line quickstart](/line/start-building/quickstart), agents listed at [play.cartesia.ai/agents](https://play.cartesia.ai/agents))
+- Cartesia API key (`sk_car_...`) from [Cartesia keys](https://play.cartesia.ai/keys)
+- LiveAvatar API key from [app.liveavatar.com/developers](https://app.liveavatar.com/developers)
+- Node.js 20+ and pnpm 9+
+
+## Quick start
+
+The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo ships a Next.js demo app with a LITE Mode session route. Add your Cartesia agent config to that route and run it.
+
+<Steps>
+  <Step title="Store your Cartesia API key with LiveAvatar" titleSize="h3">
+    LiveAvatar keeps the key by reference, so session requests carry a `secret_id` instead of the key itself.
+
+    ```bash
+    curl -X POST https://api.liveavatar.com/v1/secrets \
+      -H "X-API-KEY: $LIVEAVATAR_API_KEY" \
+      -H "content-type: application/json" \
+      -d '{
+        "secret_type": "CARTESIA_API_KEY",
+        "secret_value": "'"$CARTESIA_API_KEY"'",
+        "secret_name": "Cartesia Agent Key"
+      }'
+    ```
+
+    The response returns a `secret_id`. Keep it for the next step.
+  </Step>
+
+  <Step title="Clone the SDK repo and install" titleSize="h3">
+    ```bash
+    git clone https://github.com/heygen-com/liveavatar-web-sdk.git
+    cd liveavatar-web-sdk
+    pnpm install
+    ```
+  </Step>
+
+  <Step title="Add your LiveAvatar API key" titleSize="h3">
+    Set `API_KEY` in `apps/demo/app/api/secrets.ts`. The demo ships with a working `AVATAR_ID` — swap it for one of [your own avatars](https://docs.liveavatar.com/docs/core-concepts/avatars) later.
+
+    ```typescript
+    export const API_KEY = "your-liveavatar-api-key";
+    export const API_URL = "https://api.liveavatar.com";
+    export const AVATAR_ID = "dd73ea75-1218-4ef3-92ce-606d5f7fbc0a";
+
+    // Sandbox sessions don't consume credits: https://docs.liveavatar.com/docs/sandbox-mode
+    export const IS_SANDBOX = true;
+    ```
+  </Step>
+
+  <Step title="Point the LITE session at your Line agent" titleSize="h3">
+    Add `cartesia_agent_config` to the session token request in `apps/demo/app/api/start-lite-session/route.ts`:
+
+    ```typescript
+    import { API_KEY, API_URL, AVATAR_ID, IS_SANDBOX } from "../secrets";
+
+    const CARTESIA_SECRET_ID = "your-liveavatar-secret-id";
+    const CARTESIA_AGENT_ID = "your-cartesia-agent-id";
+
+    export async function POST() {
+      const res = await fetch(`${API_URL}/v1/sessions/token`, {
+        method: "POST",
+        headers: {
+          "X-API-KEY": API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mode: "LITE",
+          avatar_id: AVATAR_ID,
+          is_sandbox: IS_SANDBOX,
+          cartesia_agent_config: {
+            secret_id: CARTESIA_SECRET_ID,
+            agent_id: CARTESIA_AGENT_ID,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        return new Response(
+          JSON.stringify({ error: "Failed to retrieve session token" }),
+          { status: res.status },
+        );
+      }
+
+      const { data } = await res.json();
+      return new Response(
+        JSON.stringify({
+          session_token: data.session_token,
+          session_id: data.session_id,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    ```
+
+    Both `secret_id` and `agent_id` are required. LiveAvatar provisions a LiveKit room and dispatches a worker that talks to your Line agent.
+  </Step>
+
+  <Step title="Run the demo" titleSize="h3">
+    ```bash
+    pnpm demo
+    ```
+
+    Open [http://localhost:3001](http://localhost:3001), click **Lite Mode**, then unmute and speak. Your Line agent answers and the avatar lip-syncs to its audio.
+  </Step>
+</Steps>
+
+## Session events
+
+Cartesia connector sessions use LiveAvatar's [FULL Mode event system](https://docs.liveavatar.com/docs/full-mode/events) over the LiveKit data channel, not LITE Mode WebSocket events. `LiveAvatarSession` emits them as typed events:
+
+```typescript
+import {
+  AgentEventsEnum,
+  LiveAvatarSession,
+} from "@heygen/liveavatar-web-sdk";
+
+const session = new LiveAvatarSession(sessionToken, { voiceChat: true });
+
+session.on(AgentEventsEnum.USER_TRANSCRIPTION, ({ text }) => {
+  console.log("user:", text);
+});
+
+session.on(AgentEventsEnum.AVATAR_TRANSCRIPTION, ({ text }) => {
+  console.log("agent:", text);
+});
+
+// Fires with stop_reason "AGENT_HANG_UP" when the Line agent ends the call.
+session.on(AgentEventsEnum.SESSION_STOPPED, ({ stop_reason }) => {
+  console.log("session stopped:", stop_reason);
+});
+
+await session.start();
+```
+
+## Configuration
+
+`cartesia_agent_config` fields on the [create session token](https://docs.liveavatar.com/api-reference/sessions/create-session-token) request:
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `secret_id` | `string` | — | LiveAvatar secret holding your `CARTESIA_API_KEY` |
+| `agent_id` | `string` | — | Cartesia Line agent to connect to |
+
+Your Line agent owns its voice, prompt, and language, so LiveAvatar takes no per-session overrides for them.
+
+To keep the config server-side, save it once as a stored [voice agent](https://docs.liveavatar.com/docs/core-concepts/voice-agents) of type `cartesia_agent` and reference it by `id` instead — see the [connector docs](https://docs.liveavatar.com/docs/lite-mode/connectors/cartesia-agent) for that payload.
+
+## Resources
+
+- [LiveAvatar Cartesia Agent Connector](https://docs.liveavatar.com/docs/lite-mode/connectors/cartesia-agent)
+- [LiveAvatar LITE Mode overview](https://docs.liveavatar.com/docs/lite-mode/overview)
+- [LiveAvatar secrets and integrations](https://docs.liveavatar.com/docs/core-concepts/secrets)
+- [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk)
+- [Cartesia Line quickstart](/line/start-building/quickstart)
+- [Cartesia Line agents](/line/sdk/agents)
