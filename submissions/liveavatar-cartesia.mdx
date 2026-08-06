@@ -1,6 +1,7 @@
 ---
 title: "LiveAvatar + Cartesia"
-description: "Drive a LiveAvatar interactive avatar with a Cartesia Sonic TTS voice"
+sidebarTitle: "LiveAvatar (HeyGen) + Cartesia"
+description: "Drive a LiveAvatar (by HeyGen) interactive avatar with a Cartesia Sonic TTS voice"
 last_verified: "2026-08-05"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -19,14 +20,12 @@ developer_docs: "https://docs.liveavatar.com"
 
 ## Overview
 
-Use this integration to speak a [LiveAvatar](https://docs.liveavatar.com) avatar's responses with a [Cartesia Sonic TTS](/build-with-cartesia/tts-models/latest) voice. LiveAvatar handles the LLM, streaming video, and lip sync; Cartesia generates the audio.
-
-Set `provider` to `cartesia` in the session's [voice settings](https://docs.liveavatar.com/docs/full-mode/voice-settings) to synthesize the selected LiveAvatar voice with Sonic. You can also bring your own Cartesia API key and import your own Cartesia voices — see [Use your own Cartesia voices](#use-your-own-cartesia-voices).
+Use this integration to speak a [LiveAvatar](https://docs.liveavatar.com) avatar's responses with a [Cartesia Sonic TTS](/build-with-cartesia/tts-models/latest) voice. Set `provider` to `cartesia` in the session's [voice settings](https://docs.liveavatar.com/docs/full-mode/voice-settings) to render the avatar with Sonic — see [Use your own Cartesia voices](#use-your-own-cartesia-voices) to import your own API key and voices.
 
 ## Prerequisites
 
 - LiveAvatar API key from [app.liveavatar.com/developers](https://app.liveavatar.com/developers)
-- Node.js 20+ and pnpm 9+
+- Node.js 22+ and pnpm 9+
 - Cartesia API key (`sk_car_...`) from [Cartesia keys](https://play.cartesia.ai/keys) — only for importing your own Cartesia voices
 
 ## Quick start
@@ -62,7 +61,7 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
   </Step>
 
   <Step title="Set Cartesia as the TTS provider" titleSize="h3">
-    Add `voice_settings` to `avatar_persona` in `apps/demo/app/api/start-session/route.ts`. The `provider` field selects which TTS engine renders the voice:
+    In `apps/demo/app/api/start-session/route.ts`, add a `voice_settings` block inside the existing `avatar_persona` object in the session token request. The `provider` field selects which TTS engine renders the voice:
 
     ```typescript
     const res = await fetch(`${API_URL}/v1/sessions/token`, {
@@ -78,7 +77,7 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
           voice_id: VOICE_ID,
           context_id: CONTEXT_ID,
           language: LANGUAGE,
-          voice_settings: {
+          voice_settings: {              // <------- Add this block
             provider: "cartesia",
             model: "sonic-3.5",
             speed: 1.0,
@@ -94,16 +93,28 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
 
   <Step title="Run the demo" titleSize="h3">
     ```bash
+    pnpm build
     pnpm demo
     ```
 
-    Open [http://localhost:3001](http://localhost:3001), click **Full Mode**, then unmute and talk. The avatar answers in the Sonic voice.
+    Open [http://localhost:3001](http://localhost:3001), click **Full Mode**, then unmute and talk. The avatar answers in the Sonic voice that is the default voice ID in `secrets.ts`.
+
+    <Note>
+      The voice ID in `secrets.ts` refers to the ID provided by LiveAvatar. It corresponds to the `provider_voice_id`, which is the voice ID provided by Cartesia. The two IDs are not the same, but they refer to the same voice.
+    </Note>
   </Step>
 </Steps>
 
 ## Use your own Cartesia voices
 
 Register your Cartesia API key as a LiveAvatar [secret](https://docs.liveavatar.com/docs/core-concepts/secrets), then bind a Cartesia voice to it — full flow in [Custom TTS Integration](https://docs.liveavatar.com/docs/full-mode/custom-tts). Get `provider_voice_id` from the [Cartesia playground](https://play.cartesia.ai/voices) or the [list voices endpoint](/api-reference/voices/list).
+
+Set the environment variables used in the requests:
+
+```bash
+export LIVEAVATAR_API_KEY="your-liveavatar-api-key"
+export CARTESIA_API_KEY="your-cartesia-api-key"
+```
 
 ```bash
 curl -X POST https://api.liveavatar.com/v1/secrets \
@@ -116,7 +127,12 @@ curl -X POST https://api.liveavatar.com/v1/secrets \
   }'
 ```
 
-The response contains a `secret_id`. Pass it with the Cartesia voice ID to create a LiveAvatar voice:
+The returned JSON contains a secret `id`:
+```
+{"code":1000,"data":{"id":"XXXXXXXX-0239-4180-9acd-XXXXXXXXXXX","secret_name":"My Cartesia Key"},"message":"Secret created successfully"}
+```
+
+Pass it with the Cartesia voice ID to create a LiveAvatar voice:
 
 ```bash
 curl -X POST https://api.liveavatar.com/v1/voices/third_party \
@@ -129,7 +145,7 @@ curl -X POST https://api.liveavatar.com/v1/voices/third_party \
   }'
 ```
 
-The response returns a LiveAvatar `voice_id`. Use it as `VOICE_ID` in `secrets.ts`. LiveAvatar generates that session's audio with your Cartesia credentials.
+The response returns a LiveAvatar `voice_id` (different from the Cartesia Voice ID you supplied). Use it as `VOICE_ID` in `secrets.ts`. LiveAvatar generates that session's audio with your Cartesia credentials.
 
 <Note>The imported voice stops working if the underlying Cartesia voice is deleted or the secret is removed.</Note>
 

@@ -1,6 +1,7 @@
 ---
 title: "LiveAvatar + Cartesia Line"
-description: "Give a deployed Cartesia Line agent a streaming avatar with the LiveAvatar Cartesia Agent Connector"
+sidebarTitle: "LiveAvatar (HeyGen) + Cartesia Line"
+description: "Give a deployed Cartesia Line agent a streaming avatar with the LiveAvatar (by HeyGen) Cartesia Agent Connector"
 last_verified: "2026-08-05"
 
 # Contributor info (used for re-verification outreach and attribution)
@@ -28,7 +29,7 @@ You pass an `agent_id` and a stored Cartesia API key when creating the session â
 - Cartesia Line agent deployed with an `agent_id` ([Line quickstart](/line/start-building/quickstart), agents listed at [play.cartesia.ai/agents](https://play.cartesia.ai/agents))
 - Cartesia API key (`sk_car_...`) from [Cartesia keys](https://play.cartesia.ai/keys)
 - LiveAvatar API key from [app.liveavatar.com/developers](https://app.liveavatar.com/developers)
-- Node.js 20+ and pnpm 9+
+- Node.js 22+ and pnpm 9+
 
 ## Quick start
 
@@ -37,6 +38,13 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
 <Steps>
   <Step title="Store your Cartesia API key with LiveAvatar" titleSize="h3">
     LiveAvatar keeps the key by reference, so session requests carry a `secret_id` instead of the key itself.
+
+    Set the environment variables used in the request:
+
+    ```bash
+    export LIVEAVATAR_API_KEY="your-liveavatar-api-key"
+    export CARTESIA_API_KEY="your-cartesia-api-key"
+    ```
 
     ```bash
     curl -X POST https://api.liveavatar.com/v1/secrets \
@@ -123,6 +131,7 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
 
   <Step title="Run the demo" titleSize="h3">
     ```bash
+    pnpm build
     pnpm demo
     ```
 
@@ -132,7 +141,9 @@ The [LiveAvatar Web SDK](https://github.com/heygen-com/liveavatar-web-sdk) repo 
 
 ## Session events
 
-Cartesia connector sessions use LiveAvatar's [FULL Mode event system](https://docs.liveavatar.com/docs/full-mode/events) over the LiveKit data channel, not LITE Mode WebSocket events. `LiveAvatarSession` emits them as typed events:
+Cartesia connector sessions use LiveAvatar's [FULL Mode event system](https://docs.liveavatar.com/docs/full-mode/events) over the LiveKit data channel, not LITE Mode WebSocket events. `LiveAvatarSession` emits them as typed events.
+
+Run this in an ES module (for example, a `"use client"` module in the demo app) or wrap the body in an async function â€” the snippet uses top-level `await`.
 
 ```typescript
 import {
@@ -140,6 +151,7 @@ import {
   LiveAvatarSession,
 } from "@heygen/liveavatar-web-sdk";
 
+// sessionToken from the start-lite-session route response
 const session = new LiveAvatarSession(sessionToken, { voiceChat: true });
 
 session.on(AgentEventsEnum.USER_TRANSCRIPTION, ({ text }) => {
