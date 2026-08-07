@@ -12,6 +12,19 @@ Third-party integration pages for [Cartesia documentation](https://docs.cartesia
 
 A Cartesia team member will review your PR using the same [SKILL.md](SKILL.md) checklist. We may have feedback — we hold a high quality bar. Once approved and merged, we'll publish the page to `docs.cartesia.ai/integrations/community/your-integration-name`.
 
+## Preview locally
+
+The root `docs.json` exists only for local preview with Mintlify. After adding, renaming, or removing a submission page, run:
+
+```sh
+node scripts/update-docs-json.mjs
+node scripts/update-docs-json.mjs --check
+git diff --check
+npx mint dev
+```
+
+Open the local URL printed by Mintlify and select your page in the sidebar. Commit the generated `docs.json` change, but do not edit it manually or use it for publishing or production navigation.
+
 ## What belongs here
 
 A community integration page shows developers how to use Cartesia **with** your tool or platform. It should include a working code example that a developer can copy-paste and run.
@@ -27,7 +40,7 @@ This is **not** the place to re-document Cartesia's API, pitch your product, or 
 - All code examples must be complete and runnable (include imports)
 - Keep tone technical; avoid marketing adjectives and focus on factual integration guidance
 - Images/screenshots are allowed when used sparingly for setup clarity; store them at `submissions/assets/images/<submission-name>/` where `<submission-name>` matches `submissions/<submission-name>.mdx`
-- Your PR should only add/modify files inside `submissions/` — do not modify repo files like README, TEMPLATE, SKILL, etc.
+- Your PR should only add/modify your own files inside `submissions/` and the root `docs.json` when changed by `node scripts/update-docs-json.mjs` solely for local `mint dev` preview. Do not modify other repo infrastructure files like README, TEMPLATE, SKILL, or scripts.
 - Read the [Style Guide](STYLE_GUIDE.md) before writing
 
 ## Maintenance policy

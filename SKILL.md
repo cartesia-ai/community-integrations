@@ -24,6 +24,16 @@ A submission must pass every item marked **[REQUIRED]** to be merged. Items mark
 - **[RECOMMENDED]** Optional sections (Configuration) included only if they add value — deleted if empty
 - **[RECOMMENDED]** If multiple languages are shown, Mintlify `[<Tabs>](https://mintlify.com/docs/content/components/tabs)` component is used
 
+## Local preview
+
+The root `docs.json` exists only to render submissions locally with `mint dev`. It is not the Cartesia production docs configuration and must not be used for publishing, production navigation, or any other purpose.
+
+- **[REQUIRED]** After adding, renaming, or removing a submission page, run `node scripts/update-docs-json.mjs`
+- **[REQUIRED]** Run `node scripts/update-docs-json.mjs --check` and confirm it passes
+- **[REQUIRED]** Run `git diff --check` and resolve any whitespace errors
+- **[REQUIRED]** Only the generator may update `docs.json`; do not edit its `navigation.pages` array manually
+- **[RECOMMENDED]** Ask the human operator to run `npx mint dev` and inspect the submission page. Do not claim visual verification unless you opened and inspected the rendered page
+
 ## Code quality
 
 - **[REQUIRED]** At least one quick start / getting started example is complete and runnable (includes all imports)
@@ -63,7 +73,8 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 
 ## Scope
 
-- **[REQUIRED]** PR only adds/modifies files inside `submissions/` — your own page (`submissions/<name>.mdx`) and its assets (`submissions/assets/images/<name>/`) — do not touch repo infrastructure files (README, TEMPLATE, SKILL, STYLE_GUIDE, etc.) or other contributors' files
+- **[REQUIRED]** PR only adds/modifies your own page (`submissions/<name>.mdx`), its assets (`submissions/assets/images/<name>/`), and the root `docs.json` when changed by `node scripts/update-docs-json.mjs` solely for local `mint dev` preview
+- **[REQUIRED]** Do not modify any other repo infrastructure files (README, TEMPLATE, SKILL, STYLE_GUIDE, scripts, etc.) or other contributors' files
 - **[REQUIRED]** No third-party pricing, competitive comparisons, or product pitches
 - **[REQUIRED]** No claims about Cartesia's performance, roadmap, or capabilities beyond what's documented
 
@@ -73,8 +84,9 @@ Cross-check Cartesia-specific claims against [docs.cartesia.ai/skill.md](https:/
 
 After the checklist above passes:
 
+- Run `node scripts/update-docs-json.mjs --check`; request an updated generated `docs.json` if it fails
 - Verify the integration actually works (if feasible — run the quick start)
 - Check for duplicate/overlapping content with existing integration pages
 - Confirm the integration is relevant to Cartesia users (not a stretch)
 - Draft reply to contributor with any feedback (use PR comments)
-- Once merged: use the merge skill at `internal/skills/merge/SKILL.md` to migrate the page to the docs repo under `integrations/community/`, fix paths, add nav entry to `docs.json`, deploy
+- Once merged: use the merge skill at `internal/skills/merge/SKILL.md` to migrate the page to the docs repo under `integrations/community/`, fix paths, add a separate entry to the production docs repo's `docs.json`, and deploy; never copy or use this repo's preview-only `docs.json`
