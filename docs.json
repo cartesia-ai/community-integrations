@@ -1,0 +1,36 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "aspen",
+  "name": "Cartesia Community Integrations Preview",
+  "colors": {
+    "primary": "#309d4b",
+    "light": "#309d4b",
+    "dark": "#004e23"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Inter",
+      "weight": 600
+    },
+    "body": {
+      "family": "Inter"
+    }
+  },
+  "background": {
+    "color": {
+      "light": "#f9f9f8",
+      "dark": "#171715"
+    }
+  },
+  "navigation": {
+    "pages": [
+      "submissions/anam-cartesia",
+      "submissions/avaturn-cartesia-line",
+      "submissions/bandwidth-cartesia",
+      "submissions/genesys-tts-connector-cartesia-sonic",
+      "submissions/parallel-cartesia-line",
+      "submissions/tavily-cartesia-line",
+      "submissions/truefoundry"
+    ]
+  }
+}
