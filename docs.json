@@ -28,9 +28,12 @@
       "submissions/avaturn-cartesia-line",
       "submissions/bandwidth-cartesia",
       "submissions/genesys-tts-connector-cartesia-sonic",
+      "submissions/liveavatar-cartesia",
+      "submissions/liveavatar-cartesia-line",
       "submissions/parallel-cartesia-line",
       "submissions/tavily-cartesia-line",
-      "submissions/truefoundry"
+      "submissions/truefoundry",
+      "submissions/vercel-ai-gateway-cartesia"
     ]
   }
 }
