@@ -67,7 +67,7 @@ The two snippets form a round trip: the first synthesizes a WAV file with Sonic,
     await writeFile('speech.wav', audio.uint8Array);
     ```
 
-    Run it with `npx tsx generate-speech.ts`. Browse voice IDs in the [voice library](https://play.cartesia.ai/voices).
+    Run it with `npx tsx generate-speech.ts`. Browse voice IDs in the [voice library](https://play.cartesia.ai/voices). Under the hood this is a single HTTP request to Cartesia's [TTS bytes endpoint](/api-reference/tts/bytes) — no WebSocket involved.
   </Step>
 
   <Step title="Transcribe audio with Ink-Whisper" titleSize="h3">
@@ -96,5 +96,5 @@ The gateway also serves [Ink 2](/build-with-cartesia/stt/latest) streaming trans
 - [AI Gateway models page](https://vercel.com/ai-gateway/models)
 - [AI SDK speech generation](https://ai-sdk.dev/docs/ai-sdk-core/speech)
 - [AI SDK transcription](https://ai-sdk.dev/docs/ai-sdk-core/transcription)
-- [Cartesia TTS API reference](/api-reference/tts/tts)
-- [Cartesia STT API reference](/api-reference/stt/transcribe)
+- [Cartesia TTS bytes API reference](/api-reference/tts/bytes)
+- [Cartesia batch STT API reference](/api-reference/stt/transcribe)
