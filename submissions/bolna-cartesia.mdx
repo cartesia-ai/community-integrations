@@ -1,0 +1,152 @@
+---
+title: "Bolna + Cartesia"
+description: "Create a Bolna voice AI phone agent that speaks with a Cartesia Sonic voice"
+last_verified: "2026-10-11"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Tanisha Sharma"
+contributor_email: "tanisha.sharma@bolna.dev"
+contributor_url: "https://www.bolna.ai"
+
+# Integration metadata
+cartesia_product: [tts]
+developer: "Bolna"
+developer_website: "https://www.bolna.ai"
+developer_docs: "https://www.bolna.ai/docs/introduction"
+---
+
+<Check>Last verified: 2026-10-11</Check>
+
+## Overview
+
+[Bolna](https://www.bolna.ai/docs/introduction) runs voice AI agents over the phone, chaining a transcriber, an LLM, and a synthesizer on each call. Set [Sonic](/build-with-cartesia/tts-models/latest) as the agent's synthesizer to speak every reply with a Cartesia voice.
+
+## Prerequisites
+
+- A Bolna account at [platform.bolna.ai](https://platform.bolna.ai) with wallet credits, since calls consume credits
+- A Bolna API key (`BOLNA_API_KEY`) from [Generate an API key](https://www.bolna.ai/docs/api-reference/introduction)
+- A phone number to call, in [E.164](https://en.wikipedia.org/wiki/E.164) format (for example `+919876543210`)
+- `curl`
+- Optional: a [Cartesia API key](https://play.cartesia.ai/keys) (looks like `sk_car_...`), if you want Bolna to synthesize with your own Cartesia account
+
+## Quick start
+
+<Steps>
+  <Step title="Connect your Cartesia key (optional)" titleSize="h3">
+    To use your own Cartesia account, open **Settings** > [**Integrations**](https://platform.bolna.ai/providers) in the Bolna dashboard, filter by **TTS**, click **Connect** on the **Cartesia** card, and paste your Cartesia API key. Skip this step to use Bolna's Cartesia access.
+  </Step>
+
+  <Step title="Set your Bolna API key" titleSize="h3">
+    ```bash
+    export BOLNA_API_KEY="bn-your-key"
+    ```
+  </Step>
+
+  <Step title="Create an agent with a Sonic voice" titleSize="h3">
+    The `synthesizer` block selects Cartesia. Bolna validates the `model` and `voice_id` pair against its voice catalog, and requires `language` inside `provider_config` for Cartesia.
+
+    ```bash
+    curl https://api.bolna.ai/v2/agent \
+      -H "Authorization: Bearer $BOLNA_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "agent_config": {
+          "agent_name": "Cartesia Sonic Agent",
+          "agent_welcome_message": "Hi! This is a test call from a Bolna agent speaking with a Cartesia voice. How is your day going?",
+          "tasks": [{
+            "task_type": "conversation",
+            "toolchain": { "execution": "sequential", "pipelines": [["transcriber", "llm", "synthesizer"]] },
+            "tools_config": {
+              "synthesizer": {
+                "provider": "cartesia",
+                "provider_config": {
+                  "voice": "Brooke - Big Sister",
+                  "voice_id": "e07c00bc-4134-4eae-9ea4-1a55fb45746b",
+                  "model": "sonic-3.6",
+                  "language": "en"
+                },
+                "stream": true,
+                "buffer_size": 250,
+                "audio_format": "wav"
+              },
+              "llm_agent": {
+                "agent_type": "simple_llm_agent",
+                "agent_flow_type": "streaming",
+                "llm_config": { "provider": "openai", "model": "gpt-4.1-mini", "max_tokens": 150, "temperature": 0.2 }
+              },
+              "transcriber": { "provider": "deepgram", "model": "nova-3", "language": "en", "stream": true, "encoding": "linear16", "sampling_rate": 16000, "endpointing": 250 },
+              "input": { "provider": "plivo", "format": "wav" },
+              "output": { "provider": "plivo", "format": "wav" }
+            },
+            "task_config": { "call_terminate": 90, "hangup_after_silence": 10 }
+          }]
+        },
+        "agent_prompts": {
+          "task_1": { "system_prompt": "You are a friendly assistant making a short test call. Keep every reply under two sentences. Ask how the person'"'"'s day is going, thank them, then end the call politely." }
+        }
+      }'
+    ```
+
+    Bolna returns the new agent's ID:
+
+    ```json
+    {
+      "agent_id": "123e4567-e89b-12d3-a456-426655440000",
+      "state": "created",
+      "version_id": "9f1d950f-a4ae-4ba6-bf27-19d1b7b8d32e"
+    }
+    ```
+
+    Save it for the next step:
+
+    ```bash
+    export BOLNA_AGENT_ID="your-agent-id"
+    ```
+  </Step>
+
+  <Step title="Place a call" titleSize="h3">
+    Replace the number with your own. Bolna calls it from its default number.
+
+    ```bash
+    curl https://api.bolna.ai/call \
+      -H "Authorization: Bearer $BOLNA_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "agent_id": "'"$BOLNA_AGENT_ID"'",
+        "recipient_phone_number": "+919876543210"
+      }'
+    ```
+
+    ```json
+    { "message": "done", "status": "queued", "execution_id": "123e4567-e89b-12d3-a456-426614174000" }
+    ```
+
+    Your phone rings within a few seconds, and the agent greets you in the Sonic voice.
+  </Step>
+</Steps>
+
+To configure the same agent without code, select Cartesia as the voice provider on the agent's [Languages tab](https://www.bolna.ai/docs/agent-setup/audio-tab) in the Bolna dashboard.
+
+## Configuration
+
+Cartesia settings live in `tools_config.synthesizer.provider_config`:
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `model` | `string` | Required | `sonic-3.6`, `sonic-3.5`, or `sonic-3` |
+| `voice` | `string` | Required | Voice display name, for example `"Brooke - Big Sister"` |
+| `voice_id` | `string` | Required | Voice ID from Bolna's voice catalog (see below) |
+| `language` | `string` | Required | Language code for synthesis, for example `"en"` or `"hi"` |
+| `speed` | `number` | `1` | Speaking rate, from `0.6` to `1.5` |
+| `volume` | `number` | `1` | Output volume, from `0.5` to `2` |
+
+Bolna validates `model` and `voice_id` together, so resolve a valid pair with [List TTS providers](https://www.bolna.ai/docs/api-reference/voice/get_providers) and [List voices](https://www.bolna.ai/docs/api-reference/voice/get_all) before you create the agent. For tips on picking a voice, see [Choosing a voice](/build-with-cartesia/capability-guides/choosing-a-voice).
+
+## Resources
+
+- [Bolna Cartesia guide](https://www.bolna.ai/docs/cartesia)
+- [Bolna create agent API](https://www.bolna.ai/docs/api-reference/agent/v2/create)
+- [Bolna make call API](https://www.bolna.ai/docs/api-reference/calls/make)
+- [Bolna provider credentials](https://www.bolna.ai/docs/providers)
+- [Sonic TTS models](/build-with-cartesia/tts-models/latest)
+- [Cartesia voice library](https://play.cartesia.ai/voices)
