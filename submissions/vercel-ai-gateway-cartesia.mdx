@@ -1,0 +1,100 @@
+---
+title: "Vercel AI Gateway + Cartesia"
+description: "Call Cartesia Sonic text-to-speech and Ink speech-to-text through Vercel AI Gateway with a single API key"
+last_verified: "2026-08-10"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Carlton Aikins (Vercel)"
+contributor_email: "carlton.aikins@vercel.com"
+contributor_url: "https://vercel.com"
+
+# Integration metadata
+cartesia_product: [tts, stt]
+developer: "Vercel"
+developer_website: "https://vercel.com"
+developer_docs: "https://vercel.com/docs/ai-gateway"
+---
+
+<Check>Last verified: 2026-08-10</Check>
+
+## Overview
+
+[Vercel AI Gateway](https://vercel.com/docs/ai-gateway) routes requests to hundreds of AI models through a single API key and endpoint, with usage monitoring and provider failover. Cartesia's [Sonic](/build-with-cartesia/tts-models/latest) text-to-speech and [Ink](/build-with-cartesia/stt/latest) speech-to-text models are available through the gateway's [AI SDK](https://ai-sdk.dev/docs) interface, so one `ai` package dependency and one key cover Cartesia audio alongside language models from other providers.
+
+## Prerequisites
+
+- Node.js 22 or later
+- An AI Gateway API key — create one under **AI Gateway** → **API Keys** in the [Vercel dashboard](https://vercel.com/docs/ai-gateway/authentication-and-byok/authentication), exported as `AI_GATEWAY_API_KEY`
+- A TypeScript runner such as [tsx](https://tsx.is) — the snippets use top-level `await`, which requires an ES module context
+
+## Quick start
+
+The two snippets form a round trip: the first synthesizes a WAV file with Sonic, the second transcribes that file with Ink-Whisper.
+
+<Steps>
+  <Step title="Install the AI SDK" titleSize="h3">
+    ```bash
+    npm install ai
+    ```
+
+    No Cartesia provider package is needed — the AI SDK resolves `creator/model-name` strings through AI Gateway by default.
+  </Step>
+
+  <Step title="Set your API key" titleSize="h3">
+    ```bash
+    export AI_GATEWAY_API_KEY=your-gateway-api-key
+    ```
+  </Step>
+
+  <Step title="Generate speech with Sonic" titleSize="h3">
+    ```ts
+    import { generateSpeech } from 'ai';
+    import { writeFile } from 'node:fs/promises';
+
+    const { audio } = await generateSpeech({
+      model: 'cartesia/sonic-3.5',
+      text: 'Hello from Cartesia and the AI Gateway.',
+      voice: 'a0e99841-438c-4a64-b679-ae501e7d6091',
+      providerOptions: {
+        cartesia: {
+          container: 'wav', // WAV output so the next step can transcribe it
+          encoding: 'pcm_s16le',
+          sampleRate: 24000,
+        },
+      },
+    });
+
+    await writeFile('speech.wav', audio.uint8Array);
+    ```
+
+    Run it with `npx tsx generate-speech.ts`. Browse voice IDs in the [voice library](https://play.cartesia.ai/voices). Under the hood this is a single HTTP request to Cartesia's [TTS bytes endpoint](/api-reference/tts/bytes) — no WebSocket involved.
+  </Step>
+
+  <Step title="Transcribe audio with Ink-Whisper" titleSize="h3">
+    ```ts
+    import { transcribe } from 'ai';
+    import { readFile } from 'node:fs/promises';
+
+    const { text, durationInSeconds } = await transcribe({
+      model: 'cartesia/ink-whisper',
+      audio: await readFile('speech.wav'),
+    });
+
+    console.log(text); // "Hello from Cartesia and the AI Gateway."
+    console.log(durationInSeconds);
+    ```
+
+    Batch transcription accepts container formats such as WAV or MP3, not raw PCM.
+  </Step>
+</Steps>
+
+The gateway also serves [Ink 2](/build-with-cartesia/stt/latest) streaming transcription over WebSocket (`cartesia/ink-2` with the AI SDK's `experimental_streamTranscribe`). Requests appear in the AI Gateway [observability dashboard](https://vercel.com/docs/ai-gateway/observability-and-spend/observability) with per-request cost, and the full model list is browsable on the [AI Gateway models page](https://vercel.com/ai-gateway/models).
+
+## Resources
+
+- [AI Gateway documentation](https://vercel.com/docs/ai-gateway)
+- [AI Gateway models page](https://vercel.com/ai-gateway/models)
+- [AI SDK speech generation](https://ai-sdk.dev/docs/ai-sdk-core/speech)
+- [AI SDK transcription](https://ai-sdk.dev/docs/ai-sdk-core/transcription)
+- [Cartesia TTS bytes API reference](/api-reference/tts/bytes)
+- [Cartesia batch STT API reference](/api-reference/stt/transcribe)
