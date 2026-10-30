@@ -1,0 +1,155 @@
+---
+title: "Synthesia + Cartesia"
+description: "Lip-sync a Synthesia interactive avatar to a LiveKit agent that listens with Cartesia Ink 2 and speaks with Cartesia Sonic"
+last_verified: "2026-10-30"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "Synthesia"
+contributor_email: "atharva.patil@synthesia.io"
+contributor_url: "https://www.synthesia.io"
+
+# Integration metadata
+cartesia_product: [tts, stt]
+developer: "Synthesia"
+developer_website: "https://www.synthesia.io"
+developer_docs: "https://docs.synthesia.io/docs/interactive-avatars"
+---
+
+<Check>Last verified: 2026-10-30</Check>
+
+## Overview
+
+Use this integration to put a [Synthesia interactive avatar](https://docs.synthesia.io/docs/interactive-avatars) on a [LiveKit agent](https://docs.livekit.io/agents/) that transcribes the user with [Cartesia Ink 2](/build-with-cartesia/stt/latest) and replies with a [Cartesia Sonic 3.6](/build-with-cartesia/tts-models/latest) voice. The agent generates speech with Cartesia, and the [Synthesia avatar plugin](https://docs.livekit.io/agents/models/avatar/plugins/synthesia/) lip-syncs that audio and publishes it as video in the LiveKit room.
+
+## Prerequisites
+
+- Python 3.10–3.14 (`livekit-agents` 1.8 doesn't install on 3.15)
+- A Cartesia API key (`CARTESIA_API_KEY`, looks like `sk_car_...`) from [Cartesia keys](https://play.cartesia.ai/keys)
+- A Synthesia API key (`SYNTHESIA_API_KEY`) from [Synthesia API keys](https://app.synthesia.io/#/developers/api-keys), for a workspace whose plan includes [Interactive Avatars](https://docs.synthesia.io/docs/interactive-avatars)
+- A [LiveKit Cloud](https://cloud.livekit.io) project, which also serves the agent's LLM through [LiveKit Inference](https://docs.livekit.io/agents/models/llm/)
+- The [LiveKit CLI](https://docs.livekit.io/reference/developer-tools/livekit-cli/) v2.19.0 or later, linked to your project with `lk cloud auth`
+
+## Quick start
+
+<Steps>
+  <Step title="Install the packages" titleSize="h3">
+    Create a project directory with a `requirements.txt`:
+
+    ```text requirements.txt
+    livekit-agents[cartesia,silero,synthesia]~=1.8
+    python-dotenv
+    ```
+
+    Then install it into a virtual environment. `livekit-agents` 1.8 requires Python 3.10–3.14, so name a supported interpreter rather than a newer `python3`:
+
+    ```bash
+    python3.14 -m venv .venv && source .venv/bin/activate
+    pip install -r requirements.txt
+    ```
+  </Step>
+
+  <Step title="Add your keys" titleSize="h3">
+    `lk app env -w` writes credentials for the LiveKit CLI's default project to `.env.local`. Check which project is the default first, and switch it if needed:
+
+    ```bash
+    lk project list
+    lk project set-default <your-project-name>   # only if the default is the wrong project
+    lk app env -w
+    ```
+
+    Then add these lines to `.env.local`:
+
+    ```text .env.local
+    SYNTHESIA_API_KEY=your-synthesia-api-key
+    CARTESIA_API_KEY=your-cartesia-api-key
+    ```
+  </Step>
+
+  <Step title="Create the agent" titleSize="h3">
+    Save this as `agent.py`. The Cartesia plugin reads `CARTESIA_API_KEY`, and the Synthesia plugin reads `SYNTHESIA_API_KEY`:
+
+    ```python agent.py
+    from dotenv import load_dotenv
+    from livekit import agents
+    from livekit.agents import Agent, AgentServer, AgentSession, inference
+    from livekit.plugins import cartesia, silero, synthesia
+
+    load_dotenv(".env.local")
+
+    AVATAR_ID = "8788bef1-8020-46e0-a8f4-510ea9989b25"  # Jenny
+    CARTESIA_VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"  # Skylar
+
+    server = AgentServer()
+
+
+    @server.rtc_session(agent_name="synthesia-cartesia")
+    async def entrypoint(ctx: agents.JobContext):
+        await ctx.connect()
+
+        session = AgentSession(
+            stt=cartesia.STT(model="ink-2"),
+            llm=inference.LLM(model="google/gemma-4-31b-it"),
+            tts=cartesia.TTS(model="sonic-3.6", voice=CARTESIA_VOICE_ID),
+            vad=silero.VAD.load(),
+            turn_handling={"turn_detection": "stt"},
+        )
+
+        avatar = synthesia.AvatarSession(
+            synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]),
+            join_timeout=60.0,
+        )
+        # The avatar takes over the session's audio output, so it must start first.
+        await avatar.start(session, room=ctx.room)
+
+        await session.start(
+            room=ctx.room,
+            agent=Agent(
+                instructions=(
+                    "You are a friendly assistant speaking through a video avatar. "
+                    "Answer in one to three short spoken sentences, without markdown, lists, or URLs."
+                ),
+            ),
+        )
+        await session.generate_reply(instructions="Greet the user in one short sentence.")
+
+
+    if __name__ == "__main__":
+        agents.cli.run_app(server)
+    ```
+  </Step>
+
+  <Step title="Run the agent" titleSize="h3">
+    ```bash
+    lk agent dev
+    ```
+
+    Open the [Agent Console](https://docs.livekit.io/testing/agent-console/) link that `lk agent dev` prints, start a session, and allow the microphone. The avatar joins the room, greets you in the Skylar Sonic voice, and lip-syncs each reply. A cold start can take up to a minute before the avatar appears.
+
+    <Note>
+      Use `lk agent dev`, not `lk agent console`. Console mode runs without a LiveKit room, and the avatar never joins.
+    </Note>
+  </Step>
+</Steps>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `CARTESIA_VOICE_ID` | `string` | `"db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"` | Any Cartesia voice your account can use, including [cloned voices](/build-with-cartesia/capability-guides/clone-voices) |
+| `cartesia.TTS(model=...)` | `string` | `"sonic-3.6"` | Sonic model; pin a dated snapshot such as `sonic-3.6-2026-08-27` in production |
+| `cartesia.STT(model=...)` | `string` | `"ink-2"` | Ink model that transcribes the user and detects the end of each turn |
+| `AVATAR_ID` | `string` | `"8788bef1-8020-46e0-a8f4-510ea9989b25"` | Any avatar in your Synthesia workspace's gallery |
+| `join_timeout` | `float` | `60.0` | Seconds to wait for the avatar to join the room before raising `SynthesiaError` |
+
+<Note>
+  To bill Cartesia usage to your LiveKit account instead, use `inference.STT(model="cartesia/ink-2")` and `inference.TTS(model="cartesia/sonic-3.6", voice=CARTESIA_VOICE_ID)` through [LiveKit Inference](/integrations/live-kit) and drop `CARTESIA_API_KEY`. Custom voices from your Cartesia account aren't available through LiveKit Inference.
+</Note>
+
+## Resources
+
+- [Synthesia Interactive Avatars docs](https://docs.synthesia.io/docs/interactive-avatars)
+- [LiveKit Synthesia avatar plugin](https://docs.livekit.io/agents/models/avatar/plugins/synthesia/)
+- [Synthesia interactive avatar quickstarts](https://github.com/synthesia-ai/interactive-avatar-quickstarts), including a token server and browser frontend
+- [Cartesia with LiveKit](/integrations/live-kit)
+- [Cartesia Sonic 3.6](/build-with-cartesia/tts-models/latest)
+- [Cartesia Ink 2](/build-with-cartesia/stt/latest)
