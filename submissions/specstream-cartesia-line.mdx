@@ -1,0 +1,196 @@
+---
+title: "SpecStream + Cartesia Line"
+description: "Give a Cartesia Line voice agent live web search and page extraction through the SpecStream Search API and Extract API"
+last_verified: "2026-11-07"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "SpecStream"
+contributor_email: "support@specstream.ai"
+contributor_url: "https://specstream.ai"
+
+# Integration metadata
+cartesia_product: [line]
+developer: "SpecStream"
+developer_website: "https://specstream.ai"
+developer_docs: "https://specstream.ai/docs/api"
+---
+
+<Check>Last verified: 2026-11-07</Check>
+
+## Overview
+
+Add live web search and page reading to a [Cartesia Line](/line/sdk/agents) voice agent using [loopback tools](/line/sdk/tools) backed by the [SpecStream API](https://specstream.ai/docs/api). The agent answers questions about current facts mid-call and reads a page when the caller names a link.
+
+## Prerequisites
+
+- Python 3.10+
+- A Cartesia API key (`CARTESIA_API_KEY`) from [Cartesia keys](https://play.cartesia.ai/keys)
+- A SpecStream API key (`SPECSTREAM_API_KEY`), created under Agents & API in a [SpecStream workspace](https://specstream.ai/signup)
+- An LLM provider key. The example uses `OPENAI_API_KEY`
+- The Cartesia CLI for local chat testing ([Line quickstart](/line/start-building/quickstart))
+
+## Installation
+
+```bash
+pip install cartesia-line httpx
+```
+
+Set the three keys in your environment before you run the agent:
+
+```bash
+export CARTESIA_API_KEY="..."
+export SPECSTREAM_API_KEY="..."
+export OPENAI_API_KEY="..."
+```
+
+## Quick start
+
+Define two [loopback tools](/line/sdk/tools) that call the SpecStream REST API with `httpx`, one for search and one for reading a page, and pass them to an `LlmAgent`. Run the file, then connect with `cartesia chat 8000`.
+
+```python
+"""Voice research agent: Cartesia Line + SpecStream."""
+
+from datetime import datetime
+import os
+from typing import Annotated
+
+import httpx
+
+from line.llm_agent import LlmAgent, LlmConfig, ToolEnv, end_call, loopback_tool
+from line.voice_agent_app import AgentEnv, CallRequest, VoiceAgentApp
+
+SPECSTREAM_API_URL = "https://api.specstream.ai"
+REQUEST_TIMEOUT_SECONDS = 30
+EXTRACT_MAX_CHARS = 3000
+
+SYSTEM_PROMPT = """Today is {today}. You are a research assistant on a live voice call.
+
+You have two web tools:
+
+1. web_search: Search the live web. Use it for current events, prices, news, or anything
+   that needs fresh data. Start here.
+2. web_extract: Read the text of one URL. Use it only when the search result is too thin,
+   or the caller names a link to read.
+
+Lead with the answer. Two or three sentences unless the caller asks for more. Name your
+source when it matters. If results conflict or look stale, say so. Use end_call when the
+caller wraps up.
+
+This is a voice call. Plain sentences only, with no markdown, no lists and no special characters."""
+
+INTRODUCTION = "Hi, I'm your research assistant. Ask me anything and I'll look it up live."
+
+
+class SpecStreamTools:
+    # One client per agent, so the connection pool is reused across tool calls.
+    def __init__(self, api_key: str):
+        self._client = httpx.AsyncClient(
+            base_url=SPECSTREAM_API_URL,
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
+
+    @loopback_tool
+    async def web_search(
+        self,
+        ctx: ToolEnv,
+        query: Annotated[str, "The question or search terms, in everyday words."],
+    ) -> str:
+        """Search the live web for current information."""
+        response = await self._client.get("/v1/web-search", params={"q": query[:2000]})
+        if response.is_error:
+            return f"Search failed with status {response.status_code}."
+        data = response.json()["data"]
+
+        parts = [f"Search results for: '{query}'\n"]
+        answer = data.get("answer")
+        if answer:
+            parts.append(f"Answer: {answer['value']} (read from {answer['page']})\n")
+        for rank, source in enumerate(data.get("sources", [])[:5], start=1):
+            parts.append(f"\n--- Source {rank}: {source['title']} ---\n")
+            if source.get("snippet"):
+                parts.append(f"{source['snippet']}\n")
+            parts.append(f"URL: {source['url']}\n")
+        if len(parts) == 1:
+            return "No relevant information found."
+        return "".join(parts)
+
+    @loopback_tool
+    async def web_extract(
+        self,
+        ctx: ToolEnv,
+        url: Annotated[str, "The URL to read."],
+    ) -> str:
+        """Read the main text of a web page, PDF, Word or Excel file given its URL."""
+        response = await self._client.post(
+            "/v1/extract", json={"urls": [url], "format": "text"}
+        )
+        if response.is_error:
+            return f"Reading {url} failed with status {response.status_code}."
+        result = response.json()["data"]["results"][0]
+        if result["status"] != "ok" or not result.get("text"):
+            return f"No text could be read from {url} (status: {result['status']})."
+
+        text = result["text"]
+        if len(text) > EXTRACT_MAX_CHARS:
+            text = text[:EXTRACT_MAX_CHARS] + "\n\n[Content truncated]"
+        return f"Text from {url}:\n\n{text}"
+
+
+def _require_env(name: str, where: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"{name} is not set. Get one at {where} and export it before running.")
+    return value
+
+
+async def get_agent(env: AgentEnv, call_request: CallRequest):
+    specstream = SpecStreamTools(
+        api_key=_require_env("SPECSTREAM_API_KEY", "https://specstream.ai/signup")
+    )
+    return LlmAgent(
+        model="openai/gpt-4o-mini",
+        api_key=_require_env("OPENAI_API_KEY", "https://platform.openai.com/api-keys"),
+        tools=[specstream.web_search, specstream.web_extract, end_call],
+        config=LlmConfig(
+            system_prompt=SYSTEM_PROMPT.format(today=datetime.now().strftime("%Y-%m-%d")),
+            introduction=INTRODUCTION,
+            max_tokens=600,
+            temperature=0.7,
+        ),
+    )
+
+
+app = VoiceAgentApp(get_agent=get_agent)
+
+if __name__ == "__main__":
+    app.run()
+```
+
+Run it:
+
+```bash
+python main.py
+# in another terminal:
+cartesia chat 8000
+```
+
+You hear the introduction. Ask about recent news, or name a URL for the agent to read.
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `q` | `string` | required | The search request, 1 to 2,000 characters. Sent as `query` by the tool. |
+| `passages` | `string` | not set | Add `passages=true` to the search call to also return the text of the top pages. The call takes up to about a second more. |
+| `format` | `string` | `"text"` in the example | `"text"` for plain text, or `"markdown"` to keep headings and links. |
+| `EXTRACT_MAX_CHARS` | `int` | `3000` | Local cap on page text, to keep the LLM context tight. |
+
+Search returns `answer` only when the results agree on one value. Every value in `rows` carries the `page` it was read from. The [Search API reference](https://specstream.ai/docs/search-api) lists every field.
+
+## Resources
+
+- [SpecStream Search API](https://specstream.ai/docs/search-api)
+- [SpecStream Extract API](https://specstream.ai/docs/extract-api)
+- [Cartesia Line quickstart](/line/start-building/quickstart)
+- [Cartesia Line tools reference](/line/sdk/tools)
