@@ -1,0 +1,246 @@
+---
+title: "NordTell + Cartesia"
+description: "Create a NordTell AI phone agent that speaks with a Cartesia Sonic voice"
+last_verified: "2026-11-18"
+
+# Contributor info (used for re-verification outreach and attribution)
+contributor: "NordTell team"
+contributor_email: "hello@nordtell.com"
+contributor_url: "https://nordtell.com"
+
+# Integration metadata
+cartesia_product: [tts]
+developer: "NordTell"
+developer_website: "https://nordtell.com"
+developer_docs: "https://nordtell.com/integrations/cartesia/"
+---
+
+<Check>Last verified: 2026-11-18</Check>
+
+## Overview
+
+[NordTell](https://nordtell.com/app/#/docs/developers) runs AI agents that answer and place phone calls. Give an agent a [Sonic](/build-with-cartesia/tts-models/latest) voice and NordTell sends every reply the agent speaks, on phone calls and in browser tests, to Cartesia.
+
+## Prerequisites
+
+- A NordTell account ([sign up](https://nordtell.com/app/#/register)). You don't need a Cartesia API key: NordTell calls Cartesia with its own key, and Cartesia usage is included in NordTell's minutes
+- A NordTell API key (`NORDTELL_API_KEY`), created in step 1
+- For the phone call in step 5 only: minutes on your NordTell account, a [phone number](https://nordtell.com/app/#/docs/phone-numbers) in it, and a phone to ring, in [E.164](https://en.wikipedia.org/wiki/E.164) format (for example `+4520202020`)
+- One of: `curl`, or Python 3.9+ with `requests` (`pip install requests`)
+
+## Quick start
+
+<Steps>
+  <Step title="Create a NordTell API key" titleSize="h3">
+    In the NordTell app, open **Workspace settings** > **Developers** > **API keys** ([direct link](https://nordtell.com/app/#/developers)) and click **Create API key**. Enter a **Name**, tick the scopes `agents:read`, `agents:write`, `numbers:read` and `calls:make`, and click **Create key**. Copy the key, which starts with `nt_live_`; NordTell shows it only once.
+  </Step>
+
+  <Step title="Set environment variables" titleSize="h3">
+    ```bash
+    export NORDTELL_API_KEY="nt_live_your-key"
+    export RECIPIENT_PHONE_NUMBER="+4520202020"
+    ```
+  </Step>
+
+  <Step title="Pick a Cartesia voice" titleSize="h3">
+    `GET /api/v1/voices` lists the voices of every provider NordTell supports. A Cartesia voice has `"provider": "cartesia"`, and its `id` is the Cartesia voice ID.
+
+    <Tabs>
+      <Tab title="cURL">
+        ```bash
+        curl https://nordtell.com/api/v1/voices \
+          -H "X-API-Key: $NORDTELL_API_KEY"
+        ```
+      </Tab>
+      <Tab title="Python">
+        Save as `list_voices.py` and run `python list_voices.py`.
+
+        ```python
+        import os
+
+        import requests
+
+        response = requests.get(
+            "https://nordtell.com/api/v1/voices",
+            headers={"X-API-Key": os.environ["NORDTELL_API_KEY"]},
+        )
+        response.raise_for_status()
+        for voice in response.json():
+            if voice["provider"] == "cartesia" and voice["language"] == "en":
+                print(voice["id"], voice["name"])
+        ```
+      </Tab>
+    </Tabs>
+
+    The next step uses Skylar (`db6b0ed5-d5d3-463d-ae85-518a07d3c2b4`), an `en-US` voice that the [Sonic 3.6 page](/build-with-cartesia/tts-models/latest) suggests for voice agents.
+  </Step>
+
+  <Step title="Create an agent with a Sonic voice" titleSize="h3">
+    NordTell picks the voice provider from `voice_id`: a Cartesia voice ID makes Cartesia speak the agent's replies. `cartesia_model_id` selects the Sonic model. The `pipeline` engine runs speech-to-text, an LLM, and Sonic on every turn; NordTell sets a default LLM when the request names none.
+
+    <Tabs>
+      <Tab title="cURL">
+        ```bash
+        curl https://nordtell.com/api/v1/assistants \
+          -H "X-API-Key: $NORDTELL_API_KEY" \
+          -H "Content-Type: application/json" \
+          --data @- <<'EOF'
+        {
+          "name": "Cartesia Sonic agent",
+          "direction": "outbound",
+          "engine": "pipeline",
+          "config": {
+            "primary_language_id": "en",
+            "voice_id": "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4",
+            "cartesia_model_id": "sonic-3.6",
+            "voice_speed": 1.0,
+            "prompt": {
+              "system_prompt": "You are a friendly assistant making a short test call. Keep every reply under two sentences. Ask how their day is going, thank them, then say goodbye.",
+              "initial_message": "Hi! This is a test call from a NordTell agent speaking with a Cartesia voice. How is your day going?"
+            }
+          }
+        }
+        EOF
+        ```
+      </Tab>
+      <Tab title="Python">
+        Save as `create_agent.py` and run `python create_agent.py`.
+
+        ```python
+        import os
+
+        import requests
+
+        agent = {
+            "name": "Cartesia Sonic agent",
+            "direction": "outbound",
+            "engine": "pipeline",
+            "config": {
+                "primary_language_id": "en",
+                "voice_id": "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4",
+                "cartesia_model_id": "sonic-3.6",
+                "voice_speed": 1.0,
+                "prompt": {
+                    "system_prompt": "You are a friendly assistant making a short test call. Keep every reply under two sentences. Ask how their day is going, thank them, then say goodbye.",
+                    "initial_message": "Hi! This is a test call from a NordTell agent speaking with a Cartesia voice. How is your day going?",
+                },
+            },
+        }
+
+        response = requests.post(
+            "https://nordtell.com/api/v1/assistants",
+            headers={"X-API-Key": os.environ["NORDTELL_API_KEY"]},
+            json=agent,
+        )
+        response.raise_for_status()
+        created = response.json()
+        print(created["id"], created["ready_for_calls"], created["setup_missing"])
+        ```
+      </Tab>
+    </Tabs>
+
+    NordTell returns the new agent (shortened here). `ready_for_calls` is `true` once the agent has a voice and a model:
+
+    ```json
+    {
+      "id": "3f6c1a52-8d0e-4b7a-9c41-2e5d7f9a0b13",
+      "name": "Cartesia Sonic agent",
+      "engine": "pipeline",
+      "ready_for_calls": true,
+      "setup_missing": [],
+      "config": {
+        "voice_id": "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4",
+        "cartesia_model_id": "sonic-3.6",
+        "voice_speed": 1.0
+      }
+    }
+    ```
+
+    Save the ID, then read the agent back to check the voice settings:
+
+    ```bash
+    export NORDTELL_AGENT_ID="your-agent-id"
+
+    curl https://nordtell.com/api/v1/assistants/$NORDTELL_AGENT_ID \
+      -H "X-API-Key: $NORDTELL_API_KEY"
+    ```
+  </Step>
+
+  <Step title="Place a test call" titleSize="h3">
+    List your phone numbers and pick one with `"can_call_out": true`. The agent calls `RECIPIENT_PHONE_NUMBER` from it.
+
+    <Tabs>
+      <Tab title="cURL">
+        ```bash
+        curl https://nordtell.com/api/v1/phone-numbers \
+          -H "X-API-Key: $NORDTELL_API_KEY"
+
+        export NORDTELL_NUMBER_ID="your-phone-number-id"
+
+        curl https://nordtell.com/api/v1/calls/make \
+          -H "X-API-Key: $NORDTELL_API_KEY" \
+          -H "Content-Type: application/json" \
+          --data @- <<EOF
+        {
+          "agent_id": "$NORDTELL_AGENT_ID",
+          "to_number": "$RECIPIENT_PHONE_NUMBER",
+          "phone_number_id": "$NORDTELL_NUMBER_ID"
+        }
+        EOF
+        ```
+      </Tab>
+      <Tab title="Python">
+        Save as `place_call.py` and run `python place_call.py`.
+
+        ```python
+        import os
+
+        import requests
+
+        headers = {"X-API-Key": os.environ["NORDTELL_API_KEY"]}
+
+        numbers = requests.get("https://nordtell.com/api/v1/phone-numbers", headers=headers)
+        numbers.raise_for_status()
+        caller_id = next(number for number in numbers.json()["phone_numbers"] if number["can_call_out"])
+
+        response = requests.post(
+            "https://nordtell.com/api/v1/calls/make",
+            headers=headers,
+            json={
+                "agent_id": os.environ["NORDTELL_AGENT_ID"],
+                "to_number": os.environ["RECIPIENT_PHONE_NUMBER"],
+                "phone_number_id": caller_id["id"],
+            },
+        )
+        response.raise_for_status()
+        call = response.json()
+        print(call["id"], call["status"])
+        ```
+      </Tab>
+    </Tabs>
+
+    NordTell returns the call with `"status": "ringing"`. Your phone rings, and the agent greets you with `initial_message` in the Sonic voice. To test without a phone number, open the agent in the NordTell app and click **Test** to talk to it in the browser, with the same voice.
+  </Step>
+</Steps>
+
+## Configuration
+
+Cartesia settings live in the agent's `config`. Change one setting with `PATCH /api/v1/assistants/{id}` and `"merge_config": true`.
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `voice_id` | `string` | none | Cartesia voice ID from `GET /api/v1/voices`. A Cartesia ID selects Cartesia as the voice provider |
+| `cartesia_model_id` | `string` | `"sonic-3.6"` | `sonic-3.6` or `sonic-3.5`. Any other value falls back to `sonic-3.6` |
+| `voice_speed` | `number` | `1.0` | Sent to Sonic as `speed`, clamped to `0.6`–`1.5` |
+| `primary_language_id` | `string` | `"en"` | The agent's main language, sent to Sonic as `language` (for example `"da"` or `"de"`) |
+| `emotion_enabled` | `boolean` | `false` | Sends the emotion `happy` to Sonic, on English replies only |
+
+The `pipeline` and `hybrid` engines speak with the Cartesia voice. The `s2s` engine uses the realtime model's built-in voices instead. NordTell uses its own Cartesia account, so voices from your own Cartesia account don't appear in the voice list. For tips on picking a voice, see [Choosing a voice](/build-with-cartesia/capability-guides/choosing-a-voice).
+
+## Resources
+
+- [NordTell + Cartesia guide](https://nordtell.com/integrations/cartesia/)
+- [NordTell API guide](https://nordtell.com/app/#/docs/developers)
+- [NordTell API reference](https://nordtell.com/api/docs)
+- [Sonic TTS models](/build-with-cartesia/tts-models/latest)
+- [Cartesia voice library](https://play.cartesia.ai/voices)
